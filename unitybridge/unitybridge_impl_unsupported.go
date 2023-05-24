@@ -1,4 +1,4 @@
-//go:build !((darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64))
+//go:build !((darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64) || (windows && amd64))
 
 package unitybridge
 
@@ -36,6 +36,6 @@ func (ub unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64, tag
 
 func (ub unityBridgeImpl) SetEventCallback(eventCode uint64, callback EventCallback) {}
 
-func (ub unityBridgeImpl) GetSecurityKeyByKeychainIndex(index uint64) string {
+func (ub unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
 	return ""
 }

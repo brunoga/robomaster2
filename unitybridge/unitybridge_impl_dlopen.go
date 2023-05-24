@@ -78,8 +78,8 @@ func init() {
 		unityBridge.getSymbol("UnitySendEventWithNumber")
 	unityBridge.unitySetEventCallback =
 		unityBridge.getSymbol("UnitySetEventCallback")
-	unityBridge.UnityGetSecurityKeyByKeyChainIndexCaller =
-		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndexCaller")
+	unityBridge.UnityGetSecurityKeyByKeyChainIndex =
+		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
 }
 
 func (h unityBridgeImpl) getSymbol(name string) unsafe.Pointer {
@@ -150,9 +150,9 @@ func (u unityBridgeImpl) SetEventCallback(eventCode uint64,
 		C.uint64_t(eventCode), C.EventCallback(C.cEventCallback))
 }
 
-func (u unityBridgeImpl) GetSecurityKeyByKeychainIndex(index uint64) string {
+func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
 	cKey := C.UnityGetSecurityKeyByKeyChainIndexCaller(
-		unsafe.Pointer(u.UnityGetSecurityKeyByKeyChainIndexCaller),
+		unsafe.Pointer(u.UnityGetSecurityKeyByKeyChainIndex),
 		C.int(index))
 
 	return C.GoString(cKey)

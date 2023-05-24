@@ -11,7 +11,7 @@ type UnityBridge interface {
 	SendEventWithString(eventCode uint64, data string, tag uint64)
 	SendEventWithNumber(eventCode uint64, data uint64, tag uint64)
 	SetEventCallback(eventCode uint64, callback EventCallback)
-	GetSecurityKeyByKeychainIndex(index uint64) string
+	GetSecurityKeyByKeyChainIndex(index uint64) string
 }
 
 func Get() UnityBridge {
