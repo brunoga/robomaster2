@@ -30,12 +30,15 @@ var (
 )
 
 func init() {
+	log.Println("Loading Unity Bridge library")
 	libPath, ok := libPaths[fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)]
 	if !ok {
 		// Should never happen.
 		panic(fmt.Sprintf("Platform \"%s/%s\" not supported by Unity Bridge",
 			runtime.GOOS, runtime.GOARCH))
 	}
+
+	log.Printf("Using path \"%s\"\n", libPath)
 
 	cLibPath := C.CString(libPath)
 	defer C.free(unsafe.Pointer(cLibPath))
@@ -47,6 +50,8 @@ func init() {
 		panic(fmt.Sprintf("Could not load Unity Bridge library at \"%s\": %s",
 			libPath, C.GoString(cError)))
 	}
+
+	log.Println("Unity Bridge library loaded. Handle obtained.")
 
 	unityBridge.createUnityBridge =
 		unityBridge.getSymbol("CreateUnityBridge")
@@ -66,6 +71,8 @@ func init() {
 		unityBridge.getSymbol("UnitySetEventCallback")
 	unityBridge.UnityGetSecurityKeyByKeyChainIndex =
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
+
+	log.Println("Unity Bridge library symbols loaded.")
 }
 
 type unityBridgeImpl struct {
@@ -98,6 +105,7 @@ func (h unityBridgeImpl) getSymbol(name string) unsafe.Pointer {
 }
 
 func (u unityBridgeImpl) Create(name string, debuggable bool, logPath string) {
+	log.Println("Creating Unity Bridge")
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -109,14 +117,17 @@ func (u unityBridgeImpl) Create(name string, debuggable bool, logPath string) {
 }
 
 func (u unityBridgeImpl) Destroy() {
+	log.Println("Destroying Unity Bridge")
 	C.DestroyUnityBridgeCaller(unsafe.Pointer(u.destroyUnityBridge))
 }
 
 func (u unityBridgeImpl) Initialize() bool {
+	log.Println("Initializing Unity Bridge")
 	return bool(C.UnityBridgeInitializeCaller(unsafe.Pointer(u.unityBridgeInitialize)))
 }
 
 func (u unityBridgeImpl) Uninitialize() {
+	log.Println("Uninitializing Unity Bridge")
 	C.UnityBridgeUninitializeCaller(unsafe.Pointer(u.unityBridgeUninitialize))
 }
 
