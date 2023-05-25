@@ -144,10 +144,10 @@ func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
 
 func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 	handler EventCallbackHandler) {
-	// TODO(bga): Keep track of event callback on the Go side.
+	setEventCallbackHandler(eventCode, handler)
 
 	C.UnitySetEventCallbackCaller(unsafe.Pointer(u.unitySetEventCallback),
-		C.uint64_t(eventCode), C.EventCallback(C.cEventCallback))
+		C.uint64_t(eventCode), C.EventCallback(C.eventCallbackC))
 }
 
 func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {

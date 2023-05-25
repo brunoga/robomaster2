@@ -6,7 +6,7 @@
 typedef void (*EventCallback)(uint64_t event_code, uintptr_t data, int length,
                               uint64_t tag);
 
-void cEventCallback(uint64_t event_code, uintptr_t data, int length,
+void eventCallbackC(uint64_t event_code, uintptr_t data, int length,
                     uint64_t tag);
 
 #endif  // EVENT_CALLBACK_H_

@@ -138,6 +138,8 @@ func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
 
 func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 	handler EventCallbackHandler) {
+	setEventCallbackHandler(eventCode, handler)
+
 	_, _, _ = u.unitySetEventCallback.Call(
 		uintptr(eventCode),
 		uintptr(C.cEventCallback),
