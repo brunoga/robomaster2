@@ -142,7 +142,7 @@ func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 
 	_, _, _ = u.unitySetEventCallback.Call(
 		uintptr(eventCode),
-		uintptr(C.cEventCallback),
+		uintptr(C.eventCallbackC),
 	)
 }
 
