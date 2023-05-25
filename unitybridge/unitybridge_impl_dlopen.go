@@ -24,15 +24,15 @@ var (
 type unityBridgeImpl struct {
 	unityBridgeHandle unsafe.Pointer
 
-	createUnityBridge                        unsafe.Pointer
-	destroyUnityBridge                       unsafe.Pointer
-	unityBridgeInitialize                    unsafe.Pointer
-	unityBridgeUninitialize                  unsafe.Pointer
-	unitySendEvent                           unsafe.Pointer
-	unitySendEventWithString                 unsafe.Pointer
-	unitySendEventWithNumber                 unsafe.Pointer
-	unitySetEventCallback                    unsafe.Pointer
-	UnityGetSecurityKeyByKeyChainIndexCaller unsafe.Pointer
+	createUnityBridge                  unsafe.Pointer
+	destroyUnityBridge                 unsafe.Pointer
+	unityBridgeInitialize              unsafe.Pointer
+	unityBridgeUninitialize            unsafe.Pointer
+	unitySendEvent                     unsafe.Pointer
+	unitySendEventWithString           unsafe.Pointer
+	unitySendEventWithNumber           unsafe.Pointer
+	unitySetEventCallback              unsafe.Pointer
+	UnityGetSecurityKeyByKeyChainIndex unsafe.Pointer
 }
 
 var libPaths = map[string]string{
@@ -120,15 +120,15 @@ func (u unityBridgeImpl) Uninitialize() {
 	C.UnityBridgeUninitializeCaller(unsafe.Pointer(u.unityBridgeUninitialize))
 }
 
-func (u unityBridgeImpl) SendEvent(eventCode uint64, data []byte,
-	tag uint64) {
+func (u unityBridgeImpl) SendEvent(eventCode int64, data []byte,
+	tag int64) {
 	C.UnitySendEventCaller(unsafe.Pointer(u.unitySendEvent),
 		C.uint64_t(eventCode), C.uintptr_t(uintptr(unsafe.Pointer(&data[0]))),
 		C.int(len(data)), C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SendEventWithString(eventCode uint64, data string,
-	tag uint64) {
+func (u unityBridgeImpl) SendEventWithString(eventCode int64, data string,
+	tag int64) {
 	cData := C.CString(data)
 	defer C.free(unsafe.Pointer(cData))
 
@@ -136,21 +136,21 @@ func (u unityBridgeImpl) SendEventWithString(eventCode uint64, data string,
 		C.uint64_t(eventCode), cData, C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64,
-	tag uint64) {
+func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
+	tag int64) {
 	C.UnitySendEventWithNumberCaller(unsafe.Pointer(u.unitySendEventWithNumber),
 		C.uint64_t(eventCode), C.uint64_t(data), C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SetEventCallback(eventCode uint64,
-	callback EventCallback) {
+func (u unityBridgeImpl) SetEventCallback(eventCode int64,
+	handler EventCallbackHandler) {
 	// TODO(bga): Keep track of event callback on the Go side.
 
 	C.UnitySetEventCallbackCaller(unsafe.Pointer(u.unitySetEventCallback),
 		C.uint64_t(eventCode), C.EventCallback(C.cEventCallback))
 }
 
-func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
+func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
 	cKey := C.UnityGetSecurityKeyByKeyChainIndexCaller(
 		unsafe.Pointer(u.UnityGetSecurityKeyByKeyChainIndex),
 		C.int(index))
