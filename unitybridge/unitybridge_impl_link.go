@@ -3,9 +3,10 @@
 package unitybridge
 
 /*
-#cgo CFLAGS: -L. -lunitybridge.framework/unitybridge
+#cgo LDFLAGS: -L. -lunitybridge.framework/unitybridge
 
 #include <stdbool.h>
+#include <stdlib.h>
 
 void CreateUnityBridge(const char* name, bool debuggable, const char* logPath);
 void DestroyUnityBridge();
