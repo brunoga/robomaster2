@@ -13,6 +13,7 @@ package unitybridge
 import "C"
 import (
 	"fmt"
+	"log"
 	"runtime"
 	"unsafe"
 )
