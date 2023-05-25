@@ -17,23 +17,7 @@ import (
 
 var (
 	unityBridge unityBridgeImpl
-)
 
-type unityBridgeImpl struct {
-	unityBridgeHandle *syscall.DLL
-
-	createUnityBridge                  *syscall.Proc
-	destroyUnityBridge                 *syscall.Proc
-	unityBridgeInitialize              *syscall.Proc
-	unityBridgeUninitialize            *syscall.Proc
-	unitySendEvent                     *syscall.Proc
-	unitySendEventWithString           *syscall.Proc
-	unitySendEventWithNumber           *syscall.Proc
-	unitySetEventCallback              *syscall.Proc
-	UnityGetSecurityKeyByKeyChainIndex *syscall.Proc
-}
-
-var (
 	libPath = "./lib/windows/amd64/unitybridge.dll"
 )
 
@@ -63,6 +47,20 @@ func init() {
 		unityBridge.getSymbol("UnitySetEventCallback")
 	unityBridge.UnityGetSecurityKeyByKeyChainIndex =
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
+}
+
+type unityBridgeImpl struct {
+	unityBridgeHandle *syscall.DLL
+
+	createUnityBridge                  *syscall.Proc
+	destroyUnityBridge                 *syscall.Proc
+	unityBridgeInitialize              *syscall.Proc
+	unityBridgeUninitialize            *syscall.Proc
+	unitySendEvent                     *syscall.Proc
+	unitySendEventWithString           *syscall.Proc
+	unitySendEventWithNumber           *syscall.Proc
+	unitySetEventCallback              *syscall.Proc
+	UnityGetSecurityKeyByKeyChainIndex *syscall.Proc
 }
 
 func (h unityBridgeImpl) getSymbol(name string) *syscall.Proc {

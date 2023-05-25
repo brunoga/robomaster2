@@ -1,24 +1,12 @@
-//go:build !((darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64) || (windows && amd64) || (linux && (amd64 || arm64)))
+//go:build linux && (amd64 || arm64)
 
 package unitybridge
-
-import (
-	"fmt"
-	"runtime"
-)
 
 var (
 	unityBridge unityBridgeImpl
 )
 
-func init() {
-	panic(fmt.Sprintf("Platform \"%s/%s\" not supported by Unity Bridge",
-		runtime.GOOS, runtime.GOARCH))
-}
-
 type unityBridgeImpl struct{}
-
-// Empty placeholders for unsupported platforms.
 
 func (ub unityBridgeImpl) Create(name string, debuggable bool,
 	logPath string) {

@@ -19,29 +19,15 @@ import (
 
 var (
 	unityBridge unityBridgeImpl
+
+	libPaths = map[string]string{
+		"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
+		"android/arm":   "./lib/android/arm/libunitybridge.so",
+		"android/arm64": "./lib/android/arm64/libunitybridge.so",
+		"ios/arm64":     "./lib/ios/arm64/unitybridge.framework/unitybridge",
+		"windows/amd64": "./lib/windows/amd64/unitybridge.dll",
+	}
 )
-
-type unityBridgeImpl struct {
-	unityBridgeHandle unsafe.Pointer
-
-	createUnityBridge                  unsafe.Pointer
-	destroyUnityBridge                 unsafe.Pointer
-	unityBridgeInitialize              unsafe.Pointer
-	unityBridgeUninitialize            unsafe.Pointer
-	unitySendEvent                     unsafe.Pointer
-	unitySendEventWithString           unsafe.Pointer
-	unitySendEventWithNumber           unsafe.Pointer
-	unitySetEventCallback              unsafe.Pointer
-	UnityGetSecurityKeyByKeyChainIndex unsafe.Pointer
-}
-
-var libPaths = map[string]string{
-	"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
-	"android/arm":   "./lib/android/arm/libunitybridge.so",
-	"android/arm64": "./lib/android/arm64/libunitybridge.so",
-	"ios/arm64":     "./lib/ios/arm64/unitybridge.framework/unitybridge",
-	"windows/amd64": "./lib/windows/amd64/unitybridge.dll",
-}
 
 func init() {
 	libPath, ok := libPaths[fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)]
@@ -80,6 +66,20 @@ func init() {
 		unityBridge.getSymbol("UnitySetEventCallback")
 	unityBridge.UnityGetSecurityKeyByKeyChainIndex =
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
+}
+
+type unityBridgeImpl struct {
+	unityBridgeHandle unsafe.Pointer
+
+	createUnityBridge                  unsafe.Pointer
+	destroyUnityBridge                 unsafe.Pointer
+	unityBridgeInitialize              unsafe.Pointer
+	unityBridgeUninitialize            unsafe.Pointer
+	unitySendEvent                     unsafe.Pointer
+	unitySendEventWithString           unsafe.Pointer
+	unitySendEventWithNumber           unsafe.Pointer
+	unitySetEventCallback              unsafe.Pointer
+	UnityGetSecurityKeyByKeyChainIndex unsafe.Pointer
 }
 
 func (h unityBridgeImpl) getSymbol(name string) unsafe.Pointer {
