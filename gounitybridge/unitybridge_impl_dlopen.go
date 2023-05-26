@@ -54,23 +54,23 @@ func init() {
 
 	log.Println("Unity Bridge library loaded. Handle obtained.")
 
-	unityBridge.createUnityBridge, err =
+	unityBridge.createUnityBridge =
 		unityBridge.getSymbol("CreateUnityBridge")
-	unityBridge.destroyUnityBridge, err =
+	unityBridge.destroyUnityBridge =
 		unityBridge.getSymbol("DestroyUnityBridge")
-	unityBridge.unityBridgeInitialize, err =
+	unityBridge.unityBridgeInitialize =
 		unityBridge.getSymbol("UnityBridgeInitialize")
-	unityBridge.unityBridgeUninitialize, err =
+	unityBridge.unityBridgeUninitialize =
 		unityBridge.getSymbol("UnityBridgeUninitialze") // Typo in C code.
-	unityBridge.unitySendEvent, err =
+	unityBridge.unitySendEvent =
 		unityBridge.getSymbol("UnitySendEvent")
-	unityBridge.unitySendEventWithString, err =
+	unityBridge.unitySendEventWithString =
 		unityBridge.getSymbol("UnitySendEventWithString")
-	unityBridge.unitySendEventWithNumber, err =
+	unityBridge.unitySendEventWithNumber =
 		unityBridge.getSymbol("UnitySendEventWithNumber")
-	unityBridge.unitySetEventCallback, err =
+	unityBridge.unitySetEventCallback =
 		unityBridge.getSymbol("UnitySetEventCallback")
-	unityBridge.UnityGetSecurityKeyByKeyChainIndex, err =
+	unityBridge.UnityGetSecurityKeyByKeyChainIndex =
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
 
 	log.Println("Unity Bridge library symbols loaded.")
