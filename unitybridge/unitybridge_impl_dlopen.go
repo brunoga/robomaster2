@@ -1,4 +1,4 @@
-//go:build (darwin && amd64) || (android && arm) || (android && arm64)
+//go:build (darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64)
 
 package unitybridge
 
@@ -22,20 +22,21 @@ var (
 	unityBridge unityBridgeImpl
 
 	libPaths = map[string]string{
-		"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
 		"android/arm":   "./lib/android/arm/libunitybridge.so",
 		"android/arm64": "./lib/android/arm64/libunitybridge.so",
+		"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
+		"ios/arm64":     "./libunitybridge.dylib",
 		"windows/amd64": "./lib/windows/amd64/unitybridge.dll",
 	}
 )
 
-func init() {
+func Init() error {
 	log.Println("Loading Unity Bridge library")
 	libPath, ok := libPaths[fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)]
 	if !ok {
 		// Should never happen.
-		panic(fmt.Sprintf("Platform \"%s/%s\" not supported by Unity Bridge",
-			runtime.GOOS, runtime.GOARCH))
+		return fmt.Errorf("Platform \"%s/%s\" not supported by Unity Bridge",
+			runtime.GOOS, runtime.GOARCH)
 	}
 
 	log.Printf("Using path \"%s\"\n", libPath)
@@ -47,8 +48,8 @@ func init() {
 	if unityBridge.unityBridgeHandle == nil {
 		cError := C.dlerror()
 
-		panic(fmt.Sprintf("Could not load Unity Bridge library at \"%s\": %s",
-			libPath, C.GoString(cError)))
+		return fmt.Errorf("Could not load Unity Bridge library at \"%s\": %s",
+			libPath, C.GoString(cError))
 	}
 
 	log.Println("Unity Bridge library loaded. Handle obtained.")
@@ -73,6 +74,8 @@ func init() {
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
 
 	log.Println("Unity Bridge library symbols loaded.")
+
+	return nil
 }
 
 type unityBridgeImpl struct {
