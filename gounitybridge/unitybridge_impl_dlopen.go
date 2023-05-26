@@ -1,4 +1,4 @@
-//go:build (darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64)
+//go:build (darwin && amd64) || (android && arm) || (android && arm64)
 
 package gounitybridge
 
