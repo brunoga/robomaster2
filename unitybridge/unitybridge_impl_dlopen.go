@@ -25,7 +25,7 @@ var (
 		"android/arm":   "./lib/android/arm/libunitybridge.so",
 		"android/arm64": "./lib/android/arm64/libunitybridge.so",
 		"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
-		"ios/arm64":     "./libunitybridge.dylib",
+		"ios/arm64":     "libunitybridge.dylib",
 		"windows/amd64": "./lib/windows/amd64/unitybridge.dll",
 	}
 )
