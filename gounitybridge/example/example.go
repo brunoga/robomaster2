@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/brunoga/robomaster2/unitybridge"
+	"github.com/brunoga/robomaster2/gounitybridge"
 )
 
 func main() {
-	ub := unitybridge.Get()
+	ub := gounitybridge.Get()
 
 	ub.Create("Robomaster", true, "./log")
 	defer ub.Destroy()

@@ -1,6 +1,6 @@
 //go:build (darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64)
 
-package unitybridge
+package gounitybridge
 
 /*
 #include <dlfcn.h>

@@ -1,4 +1,4 @@
-package unitybridge
+package gounitybridge
 
 import "C"
 import (

@@ -1,10 +1,15 @@
-//go:build !((darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64) || (windows && amd64) || (linux && (amd64 || arm64)))
+//go:build linux && (amd64 || arm64)
 
-package unitybridge
+package gounitybridge
 
 import (
+	"debug/pe"
 	"fmt"
-	"runtime"
+	"os/exec"
+)
+
+const (
+	dllHostExe = "dllhost.exe"
 )
 
 var (
@@ -12,13 +17,21 @@ var (
 )
 
 func init() {
-	panic(fmt.Sprintf("Platform \"%s/%s\" not supported by Unity Bridge",
-		runtime.GOOS, runtime.GOARCH))
+	// Check if wine is available.
+	_, err := getWinePath()
+	if err != nil {
+		panic(err)
+	}
+
+	// Check if unitybridge_dll_host.exe is available and is a Windows
+	// executable.
+	err = checkDLLHostExe()
+	if err != nil {
+		panic(err)
+	}
 }
 
 type unityBridgeImpl struct{}
-
-// Empty placeholders for unsupported platforms.
 
 func (ub unityBridgeImpl) Create(name string, debuggable bool,
 	logPath string) {
@@ -48,4 +61,19 @@ func (ub unityBridgeImpl) SetEventCallback(eventCode int64,
 
 func (ub unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
 	return ""
+}
+
+func getWinePath() (string, error) {
+	return exec.LookPath("wine")
+}
+
+func checkDLLHostExe() error {
+	peFile, err := pe.Open(dllHostExe)
+	if err != nil {
+		return fmt.Errorf("%q does not look like a Windows executable: %w",
+			dllHostExe, err)
+	}
+	peFile.Close()
+
+	return nil
 }

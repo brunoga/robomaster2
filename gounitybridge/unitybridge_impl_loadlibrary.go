@@ -1,6 +1,6 @@
 //go:build windows && amd64
 
-package unitybridge
+package gounitybridge
 
 /*
 #include <stdbool.h>

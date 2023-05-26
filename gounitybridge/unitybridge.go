@@ -1,4 +1,4 @@
-package unitybridge
+package gounitybridge
 
 type EventCallbackHandler interface {
 	HandleEventCallback(eventCode int64, data []byte, tag int64)

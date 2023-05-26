@@ -1,17 +1,15 @@
-//go:build none
+//go:build ios && arm64
 
-package unitybridge
+package gounitybridge
 
 /*
-#cgo LDFLAGS: -L. -lunitybridge.framework/unitybridge
-
 #include <stdbool.h>
 #include <stdlib.h>
 
-void CreateUnityBridge(const char* name, bool debuggable, const char* logPath);
-void DestroyUnityBridge();
-bool UnityBridgeInitialize();
-void UnityBridgeUninitialze();
+extern void CreateUnityBridge(const char* name, bool debuggable, const char* logPath);
+extern void DestroyUnityBridge();
+extern bool UnityBridgeInitialize();
+extern void UnityBridgeUninitialze();
 */
 import "C"
 import (
