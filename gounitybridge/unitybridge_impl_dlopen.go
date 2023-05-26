@@ -30,13 +30,13 @@ var (
 	}
 )
 
-func Init() error {
+func init() {
 	log.Println("Loading Unity Bridge library")
 	libPath, ok := libPaths[fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)]
 	if !ok {
 		// Should never happen.
-		return fmt.Errorf("platform \"%s/%s\" not supported by Unity Bridge",
-			runtime.GOOS, runtime.GOARCH)
+		panic(fmt.Sprintf("platform \"%s/%s\" not supported by Unity Bridge",
+			runtime.GOOS, runtime.GOARCH))
 	}
 
 	log.Printf("Using path \"%s\"\n", libPath)
@@ -48,63 +48,32 @@ func Init() error {
 	if unityBridge.unityBridgeHandle == nil {
 		cError := C.dlerror()
 
-		return fmt.Errorf("could not load Unity Bridge library at \"%s\": %s",
-			libPath, C.GoString(cError))
+		panic(fmt.Sprintf("could not load Unity Bridge library at \"%s\": %s",
+			libPath, C.GoString(cError)))
 	}
 
 	log.Println("Unity Bridge library loaded. Handle obtained.")
 
-	var err error
-
 	unityBridge.createUnityBridge, err =
 		unityBridge.getSymbol("CreateUnityBridge")
-	if err != nil {
-		return err
-	}
 	unityBridge.destroyUnityBridge, err =
 		unityBridge.getSymbol("DestroyUnityBridge")
-	if err != nil {
-		return err
-	}
 	unityBridge.unityBridgeInitialize, err =
 		unityBridge.getSymbol("UnityBridgeInitialize")
-	if err != nil {
-		return err
-	}
 	unityBridge.unityBridgeUninitialize, err =
 		unityBridge.getSymbol("UnityBridgeUninitialze") // Typo in C code.
-	if err != nil {
-		return err
-	}
 	unityBridge.unitySendEvent, err =
 		unityBridge.getSymbol("UnitySendEvent")
-	if err != nil {
-		return err
-	}
 	unityBridge.unitySendEventWithString, err =
 		unityBridge.getSymbol("UnitySendEventWithString")
-	if err != nil {
-		return err
-	}
 	unityBridge.unitySendEventWithNumber, err =
 		unityBridge.getSymbol("UnitySendEventWithNumber")
-	if err != nil {
-		return err
-	}
 	unityBridge.unitySetEventCallback, err =
 		unityBridge.getSymbol("UnitySetEventCallback")
-	if err != nil {
-		return err
-	}
 	unityBridge.UnityGetSecurityKeyByKeyChainIndex, err =
 		unityBridge.getSymbol("UnityGetSecurityKeyByKeyChainIndex")
-	if err != nil {
-		return err
-	}
 
 	log.Println("Unity Bridge library symbols loaded.")
-
-	return nil
 }
 
 type unityBridgeImpl struct {
@@ -121,7 +90,7 @@ type unityBridgeImpl struct {
 	UnityGetSecurityKeyByKeyChainIndex unsafe.Pointer
 }
 
-func (h unityBridgeImpl) getSymbol(name string) (unsafe.Pointer, error) {
+func (h unityBridgeImpl) getSymbol(name string) unsafe.Pointer {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -129,11 +98,11 @@ func (h unityBridgeImpl) getSymbol(name string) (unsafe.Pointer, error) {
 	if symbol == nil {
 		cError := C.dlerror()
 
-		return nil, fmt.Errorf("could not load symbol \"%s\": %s",
-			name, C.GoString(cError))
+		panic(fmt.Sprintf("could not load symbol \"%s\": %s",
+			name, C.GoString(cError)))
 	}
 
-	return symbol, nil
+	return symbol
 }
 
 func (u unityBridgeImpl) Create(name string, debuggable bool, logPath string) {
