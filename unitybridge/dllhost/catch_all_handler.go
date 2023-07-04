@@ -7,7 +7,7 @@ import (
 )
 
 type CatchAllHandler struct {
-	writeFile *os.File
+	eventFile *os.File
 }
 
 func (c *CatchAllHandler) HandleEventCallback(eventCode int64, data []byte, tag int64) {
@@ -19,5 +19,5 @@ func (c *CatchAllHandler) HandleEventCallback(eventCode int64, data []byte, tag 
 	binary.Write(&b, binary.LittleEndian, uint16(len(data)))
 	b.Write(data)
 
-	b.WriteTo(c.writeFile)
+	b.WriteTo(c.eventFile)
 }
