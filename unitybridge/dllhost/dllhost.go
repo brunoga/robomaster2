@@ -18,6 +18,7 @@ var (
 	// Command line flags.
 	readFd  = flag.Int("read-fd", -1, "file descriptor to read from")
 	writeFd = flag.Int("write-fd", -1, "file descriptor to write to")
+	eventFd = flag.Int("event-fd", -1, "file descriptor to write events to")
 
 	catchAll *CatchAllHandler
 )
@@ -25,20 +26,20 @@ var (
 func main() {
 	flag.Parse()
 
-	if *readFd < 0 || *writeFd < 0 {
-		fmt.Fprintln(os.Stderr, "Flags -read-fd and -write-fd must be "+
-			"provided and non-negative")
+	if *readFd < 0 || *writeFd < 0 || *eventFd < 0 {
+		fmt.Fprintln(os.Stderr, "Flags -read-fd, -write-fd  and -events-fs "+
+			"must be provided and non-negative")
 		os.Exit(1)
 	}
 
-	files, err := fdsToFiles([]int{*readFd, *writeFd})
+	files, err := fdsToFiles([]int{*readFd, *writeFd, *eventFd})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error converting file descriptors to "+
 			"files: %s\n", err)
 		os.Exit(1)
 	}
 
-	catchAll = &CatchAllHandler{writeFile: files[1]}
+	catchAll = &CatchAllHandler{eventFile: files[2]}
 
 	err = loop(files[0], files[1])
 	if err != nil {

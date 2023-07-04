@@ -21,6 +21,7 @@ var (
 
 	localReadPipe  *os.File
 	localWritePipe *os.File
+	localEventPipe *os.File
 )
 
 func init() {
@@ -48,7 +49,14 @@ func init() {
 		panic(err)
 	}
 
-	err = startDllHost(winePath, dllHostPath, remoteReadPipe, remoteWritePipe)
+	var remoteEventPipe *os.File
+	localEventPipe, remoteEventPipe, err = os.Pipe()
+	if err != nil {
+		panic(err)
+	}
+
+	err = startDllHost(winePath, dllHostPath, remoteReadPipe, remoteWritePipe,
+		remoteEventPipe)
 	if err != nil {
 		panic(err)
 	}
@@ -311,17 +319,22 @@ func getDLLHostPath() (string, error) {
 }
 
 func startDllHost(winePath, dllHostPath string, remoteReadPipe,
-	remoteWritePipe *os.File) error {
+	remoteWritePipe, remoteEventPipe *os.File) error {
 	argv := []string{
 		winePath,
 		dllHostPath,
+		"-read-fd",
 		fmt.Sprintf("%d", getFd(remoteReadPipe)),
+		"-write-fd",
 		fmt.Sprintf("%d", getFd(remoteWritePipe)),
+		"-event-fd",
+		fmt.Sprintf("%d", getFd(remoteEventPipe)),
 	}
 
 	// Disable close on exec for the pipes.
 	disableCloseOnExec(remoteReadPipe)
 	disableCloseOnExec(remoteWritePipe)
+	disableCloseOnExec(remoteEventPipe)
 
 	_, err := syscall.ForkExec(winePath, argv,
 		&syscall.ProcAttr{
@@ -342,6 +355,7 @@ func startDllHost(winePath, dllHostPath string, remoteReadPipe,
 
 	remoteReadPipe.Close()
 	remoteWritePipe.Close()
+	remoteEventPipe.Close()
 
 	return nil
 }
@@ -377,7 +391,7 @@ func loop() {
 	var b bytes.Buffer
 
 	for {
-		_, err := b.ReadFrom(localReadPipe)
+		_, err := b.ReadFrom(localEventPipe)
 		if err != nil {
 			panic(err)
 		}
