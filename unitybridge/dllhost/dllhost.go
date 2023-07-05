@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 	"unsafe"
@@ -86,30 +87,28 @@ func fdToFile(proc *syscall.Proc, fd uintptr, flags uintptr,
 }
 
 func loop(readFile, writeFile *os.File) error {
-	var b bytes.Buffer
+	headerBuf := make([]byte, 3)
+
 	for {
-		_, err := b.ReadFrom(readFile)
-		if err != nil {
-			return err
+		if _, err := io.ReadFull(readFile, headerBuf); err != nil {
+			if err != io.EOF {
+				return err
+			} else {
+				break
+			}
 		}
 
-		function, err := b.ReadByte()
-		if err != nil {
-			return err
-		}
+		function := headerBuf[0]
 
-		var length uint16
-		if err := binary.Read(&b, binary.LittleEndian, &length); err != nil {
-			return err
-		}
+		length := binary.LittleEndian.Uint16(headerBuf[1:3])
 
-		data := make([]byte, length)
-		n, err := b.Read(data)
-		if err != nil {
-			return err
-		}
-		if n != int(length) {
-			return err
+		var data []byte
+		if length != 0 {
+			data = make([]byte, length)
+			_, err := io.ReadFull(readFile, data)
+			if err != nil {
+				return err
+			}
 		}
 
 		process(writeFile, function, data)
@@ -153,22 +152,33 @@ func process(writeFile *os.File, function byte, data []byte) {
 
 func runCreateUnityBridge(data []byte, b *bytes.Buffer) {
 	debuggable := data[0] != 0
-	length := binary.LittleEndian.Uint16(data[1:3])
-	name := string(data[3 : 3+length])
-	length = binary.LittleEndian.Uint16(data[3+length : 3+length+2])
-	logPath := string(data[3+length+2:])
+	nameLength := binary.LittleEndian.Uint16(data[1:3])
+	name := string(data[3 : 3+nameLength])
+
+	// No need to parse the logPath size because it will be whatever is left of
+	// the buffer. So we just make sure we skip the size.
+	logPath := string(data[3+nameLength+2:])
 
 	unitybridge.Get().Create(name, debuggable, logPath)
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runDestroyUnityBridge(data []byte, b *bytes.Buffer) {
 	unitybridge.Get().Destroy()
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runInitializeUnityBridge(data []byte, b *bytes.Buffer) {
+	res := unitybridge.Get().Initialize()
+
+	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(1))
 
-	if unitybridge.Get().Initialize() {
+	if res {
 		b.WriteByte(0x01)
 	} else {
 		b.WriteByte(0x00)
@@ -177,6 +187,9 @@ func runInitializeUnityBridge(data []byte, b *bytes.Buffer) {
 
 func runUnitializeUnityBridge(data []byte, b *bytes.Buffer) {
 	unitybridge.Get().Uninitialize()
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runUnitySendEvent(data []byte, b *bytes.Buffer) {
@@ -186,6 +199,9 @@ func runUnitySendEvent(data []byte, b *bytes.Buffer) {
 	data2 := data[18 : 18+length]
 
 	unitybridge.Get().SendEvent(int64(eventCode), data2, int64(tag))
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runUnitySendEventWithString(data []byte, b *bytes.Buffer) {
@@ -195,6 +211,9 @@ func runUnitySendEventWithString(data []byte, b *bytes.Buffer) {
 	data2 := string(data[18 : 18+length])
 
 	unitybridge.Get().SendEventWithString(int64(eventCode), data2, int64(tag))
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runUnitySendEventWithNumber(data []byte, b *bytes.Buffer) {
@@ -202,7 +221,11 @@ func runUnitySendEventWithNumber(data []byte, b *bytes.Buffer) {
 	tag := binary.LittleEndian.Uint64(data[8:16])
 	data2 := binary.LittleEndian.Uint64(data[16:24])
 
-	unitybridge.Get().SendEventWithNumber(int64(eventCode), int64(data2), int64(tag))
+	unitybridge.Get().SendEventWithNumber(int64(eventCode), int64(data2),
+		int64(tag))
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runUnitySetEventCallback(data []byte, b *bytes.Buffer) {
@@ -214,6 +237,9 @@ func runUnitySetEventCallback(data []byte, b *bytes.Buffer) {
 	} else {
 		unitybridge.Get().SetEventCallback(int64(eventCode), nil)
 	}
+
+	// Write data size.
+	binary.Write(b, binary.LittleEndian, uint16(0))
 }
 
 func runGetSecurityKeyByKeyChainIndex(data []byte, b *bytes.Buffer) {
@@ -221,6 +247,8 @@ func runGetSecurityKeyByKeyChainIndex(data []byte, b *bytes.Buffer) {
 
 	key := unitybridge.Get().GetSecurityKeyByKeyChainIndex(int64(index))
 
+	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(len(key)))
+
 	b.WriteString(key)
 }

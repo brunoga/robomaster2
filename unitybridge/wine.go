@@ -7,6 +7,7 @@ import (
 	"debug/pe"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"syscall"
@@ -66,12 +67,65 @@ func init() {
 
 type unityBridgeImpl struct{}
 
+func sendRequest(function byte, data *bytes.Buffer) ([]byte, error) {
+	// Write function identifier
+	_, err := localWritePipe.Write([]byte{function})
+	if err != nil {
+		return nil, err
+	}
+
+	if data != nil {
+		// Write total data len.
+		err = binary.Write(localWritePipe, binary.LittleEndian, uint16(data.Len()))
+		if err != nil {
+			return nil, err
+		}
+		// Write data.
+		_, err = localWritePipe.Write(data.Bytes())
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = binary.Write(localWritePipe, binary.LittleEndian, uint16(0))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Read response header.
+	headerBuf := make([]byte, 1+2)
+	_, err = io.ReadFull(localReadPipe, headerBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check function identifier.
+	if headerBuf[0] != function {
+		return nil, fmt.Errorf("unexpected function identifier: %d",
+			headerBuf[0])
+	}
+
+	// Read response length.
+	length := binary.LittleEndian.Uint16(headerBuf[1:3])
+
+	if length > 0 {
+		// Read response data.
+		response := make([]byte, length)
+		_, err = io.ReadFull(localReadPipe, response)
+		if err != nil {
+			return nil, err
+		}
+
+		return response, nil
+	}
+
+	return nil, nil
+}
+
 func (ub unityBridgeImpl) Create(name string, debuggable bool,
 	logPath string) {
 	var b bytes.Buffer
 
-	b.WriteByte(0x00)
-	binary.Write(&b, binary.LittleEndian, int64(1+2+len(name)+2+len(logPath)))
 	if debuggable {
 		b.WriteByte(1)
 	} else {
@@ -84,112 +138,46 @@ func (ub unityBridgeImpl) Create(name string, debuggable bool,
 	binary.Write(&b, binary.LittleEndian, uint16(len(logPath)))
 	b.WriteString(logPath)
 
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x00, &b)
 	if err != nil {
 		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x00 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
 	}
 }
 
 func (ub unityBridgeImpl) Destroy() {
-	var b bytes.Buffer
-
-	b.WriteByte(0x01)
-
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x01, nil)
 	if err != nil {
 		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x01 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
 	}
 }
 
 func (ub unityBridgeImpl) Initialize() bool {
-	var b bytes.Buffer
-
-	b.WriteByte(0x02)
-
-	_, err := b.WriteTo(localWritePipe)
+	res, err := sendRequest(0x02, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	response := make([]byte, 2)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x02 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
-	}
-
-	var result bool
-	binary.Read(localReadPipe, binary.LittleEndian, &result)
-
-	return result
+	return res[0] != 0
 }
 
 func (ub unityBridgeImpl) Uninitialize() {
-	var b bytes.Buffer
-
-	b.WriteByte(0x03)
-
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x03, nil)
 	if err != nil {
 		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x03 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
 	}
 }
 
 func (ub unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {
 	var b bytes.Buffer
 
-	b.WriteByte(0x04)
 	binary.Write(&b, binary.LittleEndian, eventCode)
 	binary.Write(&b, binary.LittleEndian, tag)
 	binary.Write(&b, binary.LittleEndian, uint16(len(data)))
 	b.Write(data)
 
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x04, &b)
 	if err != nil {
 		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x04 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
 	}
 }
 
@@ -197,25 +185,14 @@ func (ub unityBridgeImpl) SendEventWithString(eventCode int64, data string,
 	tag int64) {
 	var b bytes.Buffer
 
-	b.WriteByte(0x05)
 	binary.Write(&b, binary.LittleEndian, eventCode)
 	binary.Write(&b, binary.LittleEndian, tag)
 	binary.Write(&b, binary.LittleEndian, uint16(len(data)))
 	b.WriteString(data)
 
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x05, &b)
 	if err != nil {
 		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x05 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
 	}
 }
 
@@ -223,18 +200,11 @@ func (ub unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
 	tag int64) {
 	var b bytes.Buffer
 
-	b.WriteByte(0x06)
 	binary.Write(&b, binary.LittleEndian, eventCode)
 	binary.Write(&b, binary.LittleEndian, tag)
 	binary.Write(&b, binary.LittleEndian, data)
 
-	_, err := b.WriteTo(localWritePipe)
-	if err != nil {
-		panic(err)
-	}
-
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
+	_, err := sendRequest(0x06, &b)
 	if err != nil {
 		panic(err)
 	}
@@ -244,54 +214,28 @@ func (ub unityBridgeImpl) SetEventCallback(eventCode int64,
 	handler EventCallbackHandler) {
 	var b bytes.Buffer
 
-	b.WriteByte(0x07)
 	binary.Write(&b, binary.LittleEndian, eventCode)
 	binary.Write(&b, binary.LittleEndian, handler != nil)
 
-	_, err := b.WriteTo(localWritePipe)
+	_, err := sendRequest(0x07, &b)
 	if err != nil {
 		panic(err)
 	}
 
-	response := make([]byte, 1)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x07 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
-	}
+	setEventCallbackHandler(eventCode, handler)
 }
 
 func (ub unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
 	var b bytes.Buffer
 
-	b.WriteByte(0x08)
 	binary.Write(&b, binary.LittleEndian, index)
 
-	_, err := b.WriteTo(localWritePipe)
+	res, err := sendRequest(0x08, &b)
 	if err != nil {
 		panic(err)
 	}
 
-	response := make([]byte, 3)
-	_, err = localReadPipe.Read(response)
-	if err != nil {
-		panic(err)
-	}
-
-	if response[0] != 0x08 {
-		panic(fmt.Sprintf("Unexpected function byte: %d", response))
-	}
-
-	var length uint16
-	binary.Read(localReadPipe, binary.LittleEndian, &length)
-
-	data := make([]byte, length)
-	localReadPipe.Read(data)
-
-	return string(data)
+	return string(res)
 }
 
 func getWinePath() (string, error) {
@@ -343,9 +287,11 @@ func startDllHost(winePath, dllHostPath string, remoteReadPipe,
 				getFd(os.Stdout),
 				getFd(os.Stderr),
 			},
-			Env: []string{"WINEDEBUG=-all"},
 			Sys: &syscall.SysProcAttr{
 				Foreground: false,
+			},
+			Env: []string{
+				"WINEDEBUG=-all",
 			},
 		},
 	)
@@ -388,26 +334,21 @@ func getFd(file *os.File) uintptr {
 }
 
 func loop() {
-	var b bytes.Buffer
-
+	headerBuf := make([]byte, 18)
 	for {
-		_, err := b.ReadFrom(localEventPipe)
-		if err != nil {
-			panic(err)
+		if _, err := io.ReadFull(localEventPipe, headerBuf); err != nil {
+			panic(fmt.Sprintf("Error reading data: %s", err))
 		}
 
-		var eventCode int64
-		binary.Read(&b, binary.LittleEndian, &eventCode)
-
-		var tag int64
-		binary.Read(&b, binary.LittleEndian, &tag)
-
-		var length uint16
-		binary.Read(&b, binary.LittleEndian, &length)
+		eventCode := binary.LittleEndian.Uint64(headerBuf[0:4])
+		tag := binary.LittleEndian.Uint64(headerBuf[4:8])
+		length := binary.LittleEndian.Uint16(headerBuf[8:10])
 
 		data := make([]byte, length)
-		b.Read(data)
+		if _, err := io.ReadFull(localEventPipe, data); err != nil {
+			panic(fmt.Sprintf("Error reading data: %s", err))
+		}
 
-		runEventCallback(eventCode, data, tag)
+		runEventCallback(int64(eventCode), data, int64(tag))
 	}
 }
