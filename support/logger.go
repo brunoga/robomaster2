@@ -14,10 +14,11 @@ type Logger struct {
 	error   *log.Logger
 }
 
-// New returns a new logger instance configured with the given destination for
-// each level. Setting any destination to nil will disable the logging (log will
-// be sent to ioutil.Discard). Common destinations are os.Stdout and os.Stderr.
-func New(traceDest, infoDest, warningDest, errorDest io.Writer) *Logger {
+// NewLogger returns a new logger instance configured with the given destination
+// for each level. Setting any destination to nil will disable the logging (log
+// will be sent to ioutil.Discard). Common destinations are os.Stdout and
+// os.Stderr.
+func NewLogger(traceDest, infoDest, warningDest, errorDest io.Writer) *Logger {
 	if traceDest == nil {
 		traceDest = io.Discard
 	}
