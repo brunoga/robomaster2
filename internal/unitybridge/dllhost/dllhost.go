@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/brunoga/robomaster2/unitybridge"
+	"github.com/brunoga/robomaster2/internal/unitybridge"
 )
 
 var (

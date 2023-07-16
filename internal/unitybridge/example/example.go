@@ -1,6 +1,6 @@
 package main
 
-import "github.com/brunoga/robomaster2/unitybridge"
+import "github.com/brunoga/robomaster2/internal/unitybridge"
 
 func main() {
 	ub := unitybridge.Get()
