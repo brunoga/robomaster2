@@ -5,8 +5,11 @@
 *.exe
 *.exe~
 *.dll
+!/internal/unitybridge/lib/*.dll
 *.so
+!/internal/unitybridge/lib/*.so
 *.dylib
+!/internal/unitybridge/lib/*.dylib
 
 # Test binary, built with `go test -c`
 *.test
