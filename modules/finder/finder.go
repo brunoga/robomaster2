@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 	"sync"
@@ -11,14 +12,16 @@ import (
 
 const (
 	ipBroadcastAddrPort = ":45678"
+	listenerRemotePort  = ":56789"
 )
 
 // Finder provides an interface for finding a robot broadcasting its ip in
 // the network.
 type Finder struct {
-	l  *support.Logger
-	m  sync.Mutex
-	ip net.IP
+	l           *support.Logger
+	m           sync.Mutex
+	ip          net.IP
+	remoteAppID uint64
 }
 
 // New returns a Finder instance with no associated ip.
@@ -27,6 +30,7 @@ func New(l *support.Logger) *Finder {
 		l,
 		sync.Mutex{},
 		nil,
+		0,
 	}
 }
 
@@ -39,7 +43,7 @@ func (f *Finder) GetOrFindIP(timeout time.Duration) (net.IP, error) {
 	defer f.m.Unlock()
 
 	if f.ip == nil {
-		ip, err := findRobotIP(timeout)
+		ip, remoteAppID, err := findRobotIP(timeout)
 		if err != nil {
 			return nil, fmt.Errorf("error finding robot ip: %w", err)
 		}
@@ -47,6 +51,7 @@ func (f *Finder) GetOrFindIP(timeout time.Duration) (net.IP, error) {
 		f.l.INFO("Detected robot with ip %s", ip.String())
 
 		f.ip = ip
+		f.remoteAppID = remoteAppID
 	}
 
 	return f.ip, nil
@@ -61,10 +66,36 @@ func (f *Finder) SetIP(ip net.IP) {
 	f.ip = ip
 }
 
-func findRobotIP(timeout time.Duration) (net.IP, error) {
+func (f *Finder) SendACK() {
+	f.l.INFO("Sending ACK to %s%s.\n", f.ip.String(), listenerRemotePort)
+
+	buffer := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buffer, f.remoteAppID)
+
+	udpAddr, err := net.ResolveUDPAddr("udp4", f.ip.String()+listenerRemotePort)
+	if err != nil {
+		f.l.ERROR("Error resolving UDP address: %s", err.Error())
+		return
+	}
+
+	conn, err := net.DialUDP("udp4", nil, udpAddr)
+	if err != nil {
+		f.l.ERROR("Error dialing UDP: %s", err.Error())
+		return
+	}
+	defer conn.Close()
+
+	_, err = conn.Write(buffer)
+	if err != nil {
+		f.l.ERROR("Error writing to UDP: %s", err.Error())
+		return
+	}
+}
+
+func findRobotIP(timeout time.Duration) (net.IP, uint64, error) {
 	packetConn, err := net.ListenPacket("udp4", ipBroadcastAddrPort)
 	if err != nil {
-		return nil, fmt.Errorf("error starting packet listner: %w", err)
+		return nil, 0, fmt.Errorf("error starting packet listner: %w", err)
 	}
 	defer packetConn.Close()
 
@@ -72,41 +103,41 @@ func findRobotIP(timeout time.Duration) (net.IP, error) {
 
 	err = packetConn.SetReadDeadline(time.Now().Add(timeout))
 	if err != nil {
-		return nil, fmt.Errorf("error setting deadline: %w", err)
+		return nil, 0, fmt.Errorf("error setting deadline: %w", err)
 	}
 
 	n, addr, err := packetConn.ReadFrom(buf)
 	if err != nil {
-		return nil, fmt.Errorf("error reading packet: %w", err)
+		return nil, 0, fmt.Errorf("error reading packet: %w", err)
 	}
 
-	ip, err := parseAndValidateMessage(buf[:n], addr)
+	ip, remoteAppID, err := parseAndValidateMessage(buf[:n], addr)
 	if err != nil {
-		return nil, fmt.Errorf("error validating message: %w", err)
+		return nil, 0, fmt.Errorf("error validating message: %w", err)
 	}
 
-	return ip, nil
+	return ip, remoteAppID, nil
 }
 
-func parseAndValidateMessage(buf []byte, addr net.Addr) (net.IP, error) {
+func parseAndValidateMessage(buf []byte, addr net.Addr) (net.IP, uint64, error) {
 	broadcastMessage, err := ParseBroadcastMessageData(buf)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing broadcast message: %w", err)
+		return nil, 0, fmt.Errorf("error parsing broadcast message: %w", err)
 	}
 
 	if !broadcastMessage.IsPairing() {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	// Get IP and make sure it is IPv4
 	ip := net.IP(broadcastMessage.SourceIp()).To4()
 	if ip == nil {
-		return nil, fmt.Errorf("not an IPv4 address")
+		return nil, 0, fmt.Errorf("not an IPv4 address")
 	}
 
 	if !ip.Equal(addr.(*net.UDPAddr).IP) {
-		return nil, fmt.Errorf("broadcast message source does not match reported IP")
+		return nil, 0, fmt.Errorf("broadcast message source does not match reported IP")
 	}
 
-	return ip, nil
+	return ip, broadcastMessage.AppId(), nil
 }
