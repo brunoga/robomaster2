@@ -10,17 +10,17 @@ type Event struct {
 	subTyp uint64
 }
 
-// NewEvent creates a new Event with the given type and 0 as subtype. Returns a
+// New creates a new Event with the given type and 0 as subtype. Returns a
 // pointer to the created Event on success or nil on failure (usually if the
 // specific event type is unknown).
-func NewEvent(typ Type) *Event {
-	return NewEventWithSubType(typ, 0)
+func New(typ Type) *Event {
+	return NewWithSubType(typ, 0)
 }
 
-// NewEventWithSubType creates a new Event with the given type and subtype.
+// NewWithSubType creates a new Event with the given type and subtype.
 // Returns a pointer to the created Event on success or nil on failure (usually
 // if the specific event type is unknown).
-func NewEventWithSubType(typ Type, subTyp uint64) *Event {
+func NewWithSubType(typ Type, subTyp uint64) *Event {
 	if !IsValidType(typ) {
 		return nil
 	}
