@@ -10,6 +10,11 @@ extern void CreateUnityBridge(const char* name, bool debuggable, const char* log
 extern void DestroyUnityBridge();
 extern bool UnityBridgeInitialize();
 extern void UnityBridgeUninitialze();
+extern void UnityBridgeSendEvent(uint64_t event_code, intptr_t data, uint64_t tag);
+extern void UnityBridgeSendEventWithString(uint64_t event_code, const char* data, uint64_t tag);
+extern void UnityBridgeSendEventWithNumber(uint64_t event_code, uint64_t data, uint64_t tag);
+extern void UnitySetEventCallback(uint64_t event_code, EventCallback event_callback);
+extern uintptr_t UnityGetSecurityKeyByKeyChainIndex(uint64_t index);
 */
 import "C"
 import (
@@ -47,20 +52,42 @@ func (ub unityBridgeImpl) Uninitialize() {
 	C.UnityBridgeUninitialze()
 }
 
-func (ub unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {}
+func (ub unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {
+	if len(data) == 0 {
+		dataUintptr = uintptr(unsafe.Pointer(nil))
+	} else {
+		dataUintptr = uintptr(unsafe.Pointer(&data[0]))
+	}
+
+	C.UnityBridgeSendEvent(eventCode, dataUintptr, tag)
+}
 
 func (ub unityBridgeImpl) SendEventWithString(eventCode int64, data string,
 	tag int64) {
+	C.UnityBridgeSendEventWithString(eventCode, C.CString(data), tag)
 }
 
 func (ub unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
 	tag int64) {
+	C.UnityBridgeSendEventWithNumber(eventCode, data, tag)
 }
 
 func (ub unityBridgeImpl) SetEventCallback(eventCode int64,
 	handler EventCallbackHandler) {
+	setEventCallbackHandler(eventCode, handler)
+
+	var eventCallbackC C.EventCallback
+	if handler != nil {
+		eventCallbackC = C.eventCallbackC
+	}
+
+	C.UnitySetEventCallback(eventCode, eventCallbackC)
 }
 
 func (ub unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
-	return ""
+	cKeyUintptr := C.UnityBridgeGetSecurityKeyByKeyChainIndex(C.uint64_t(index))
+
+	defer C.free(unsafe.Pointer(cKeyUintptr))
+
+	return C.GoString((*C.char)(unsafe.Pointer(cKeyUintptr)))
 }
