@@ -125,9 +125,11 @@ func parseAndValidateMessage(buf []byte, addr net.Addr) (net.IP, uint64, error) 
 		return nil, 0, fmt.Errorf("error parsing broadcast message: %w", err)
 	}
 
-	if !broadcastMessage.IsPairing() {
-		return nil, 0, nil
-	}
+	// TODO(bga): Enable this again when we implement pairing. Right now assume
+	// we want to pair with any robot that is broadcasting its ip.
+	//if !broadcastMessage.IsPairing() {
+	//	return nil, 0, nil
+	//}
 
 	// Get IP and make sure it is IPv4
 	ip := net.IP(broadcastMessage.SourceIp()).To4()
