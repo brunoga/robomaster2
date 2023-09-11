@@ -12,6 +12,8 @@ type Logger struct {
 	info    *log.Logger
 	warning *log.Logger
 	error   *log.Logger
+
+	traceEnabled bool
 }
 
 // NewLogger returns a new logger instance configured with the given destination
@@ -19,8 +21,11 @@ type Logger struct {
 // will be sent to ioutil.Discard). Common destinations are os.Stdout and
 // os.Stderr.
 func NewLogger(traceDest, infoDest, warningDest, errorDest io.Writer) *Logger {
+	l := &Logger{}
 	if traceDest == nil {
 		traceDest = io.Discard
+	} else {
+		l.traceEnabled = true
 	}
 	if infoDest == nil {
 		infoDest = io.Discard
@@ -32,12 +37,12 @@ func NewLogger(traceDest, infoDest, warningDest, errorDest io.Writer) *Logger {
 		errorDest = io.Discard
 	}
 
-	return &Logger{
-		log.New(traceDest, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(infoDest, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(warningDest, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
-		log.New(errorDest, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
-	}
+	l.trace = log.New(traceDest, "TRACE: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l.info = log.New(infoDest, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l.warning = log.New(warningDest, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	l.error = log.New(errorDest, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+
+	return l
 }
 
 // TRACE logs trace messages, used mostly for debugging.
@@ -61,4 +66,10 @@ func (l *Logger) WARNING(format string, a ...interface{}) {
 // be fixed.
 func (l *Logger) ERROR(format string, a ...interface{}) {
 	l.error.Printf(format, a...)
+}
+
+// TraceEnabled returns true if tracing was enabled. Used to enable output for
+// external code (like unitybridge).
+func (l *Logger) TraceEnabled() bool {
+	return l.traceEnabled
 }
