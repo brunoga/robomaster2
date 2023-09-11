@@ -36,7 +36,12 @@ func NewClient(logger *support.Logger) (*Client, error) {
 func (c *Client) Start() error {
 	ub := unitybridge.Get()
 
-	ub.Create("Robomaster", true, "./log")
+	if c.logger.TraceEnabled() {
+		ub.Create("Robomaster", true, "./log")
+	} else {
+		ub.Create("Robomaster", false, "")
+	}
+
 	if !ub.Initialize() {
 		return fmt.Errorf("unable to initialize UnityBridge")
 	}
