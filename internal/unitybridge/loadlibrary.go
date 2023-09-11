@@ -105,9 +105,15 @@ func (u unityBridgeImpl) Uninitialize() {
 }
 
 func (u unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {
+	var dataUintptr uintptr
+	if len(data) == 0 {
+		dataUintptr = uintptr(unsafe.Pointer(nil))
+	} else {
+		dataUintptr = uintptr(unsafe.Pointer(&data[0]))
+	}
 	_, _, _ = u.unitySendEvent.Call(
 		uintptr(eventCode),
-		uintptr(unsafe.Pointer(&data[0])),
+		dataUintptr,
 		uintptr(len(data)),
 		uintptr(tag),
 	)
@@ -138,16 +144,23 @@ func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 	handler EventCallbackHandler) {
 	setEventCallbackHandler(eventCode, handler)
 
+	var eventCallbackUintptr uintptr
+	if handler != nil {
+		eventCallbackUintptr = uintptr(C.eventCallbackC)
+	}
+
 	_, _, _ = u.unitySetEventCallback.Call(
 		uintptr(eventCode),
-		uintptr(C.eventCallbackC),
+		eventCallbackUintptr,
 	)
 }
 
 func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
-	result, _, _ := u.UnityGetSecurityKeyByKeyChainIndex.Call(
+	cKeyUintptr, _, _ := u.UnityGetSecurityKeyByKeyChainIndex.Call(
 		uintptr(index),
 	)
 
-	return C.GoString((*C.char)(unsafe.Pointer(result)))
+	defer C.free(unsafe.Pointer(cKeyUintptr))
+
+	return C.GoString((*C.char)(unsafe.Pointer(cKeyUintptr)))
 }
