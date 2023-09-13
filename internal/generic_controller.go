@@ -29,7 +29,7 @@ func (g *GenericController) StartControllingEvent(typ event.Type) error {
 			event.TypeName(typ))
 	}
 
-	b.SetEventCallback(int64(typ), g.eventHandler)
+	b.SetEventCallback(uint64(typ), g.eventHandler)
 
 	g.eventHandlerIndexMap[typ] = struct{}{}
 
@@ -45,7 +45,7 @@ func (g *GenericController) StopControllingEvent(typ event.Type) error {
 			event.TypeName(typ))
 	}
 
-	b.SetEventCallback(int64(typ), nil)
+	b.SetEventCallback(uint64(typ), nil)
 
 	delete(g.eventHandlerIndexMap, typ)
 

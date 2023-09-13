@@ -9,10 +9,10 @@ import (
 
 var (
 	m                       sync.Mutex
-	eventCallbackHandlerMap = make(map[int64]EventCallbackHandler)
+	eventCallbackHandlerMap = make(map[uint64]EventCallbackHandler)
 )
 
-func setEventCallbackHandler(eventCode int64, handler EventCallbackHandler) {
+func setEventCallbackHandler(eventCode uint64, handler EventCallbackHandler) {
 	m.Lock()
 	defer m.Unlock()
 	if handler == nil {
@@ -22,7 +22,7 @@ func setEventCallbackHandler(eventCode int64, handler EventCallbackHandler) {
 	}
 }
 
-func runEventCallback(eventCode int64, data []byte, tag int64) error {
+func runEventCallback(eventCode uint64, data []byte, tag uint64) error {
 	m.Lock()
 	defer m.Unlock()
 	handler, ok := eventCallbackHandlerMap[eventCode]
@@ -38,7 +38,7 @@ func runEventCallback(eventCode int64, data []byte, tag int64) error {
 
 //export eventCallbackGo
 func eventCallbackGo(eventCode uint64, data []byte, tag uint64) {
-	err := runEventCallback(int64(eventCode), data, int64(tag))
+	err := runEventCallback(eventCode, data, tag)
 	if err != nil {
 		log.Printf("error running event callback: %s\n", err)
 	}

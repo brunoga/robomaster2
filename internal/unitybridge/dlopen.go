@@ -25,8 +25,6 @@ var (
 		"android/arm":   "./lib/android/arm/libunitybridge.so",
 		"android/arm64": "./lib/android/arm64/libunitybridge.so",
 		"darwin/amd64":  "./lib/darwin/amd64/unitybridge.bundle/Contents/MacOS/unitybridge",
-		"ios/arm64":     "libunitybridge.dylib",
-		"windows/amd64": "./lib/windows/amd64/unitybridge.dll",
 	}
 )
 
@@ -132,15 +130,20 @@ func (u unityBridgeImpl) Uninitialize() {
 	C.UnityBridgeUninitializeCaller(unsafe.Pointer(u.unityBridgeUninitialize))
 }
 
-func (u unityBridgeImpl) SendEvent(eventCode int64, data []byte,
-	tag int64) {
+func (u unityBridgeImpl) SendEvent(eventCode uint64, data []byte,
+	tag uint64) {
+	var dataUintptr uintptr
+	if len(data) > 0 {
+		dataUintptr = uintptr(unsafe.Pointer(&data[0]))
+	}
+
 	C.UnitySendEventCaller(unsafe.Pointer(u.unitySendEvent),
-		C.uint64_t(eventCode), C.uintptr_t(uintptr(unsafe.Pointer(&data[0]))),
+		C.uint64_t(eventCode), C.uintptr_t(dataUintptr),
 		C.int(len(data)), C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SendEventWithString(eventCode int64, data string,
-	tag int64) {
+func (u unityBridgeImpl) SendEventWithString(eventCode uint64, data string,
+	tag uint64) {
 	cData := C.CString(data)
 	defer C.free(unsafe.Pointer(cData))
 
@@ -148,13 +151,13 @@ func (u unityBridgeImpl) SendEventWithString(eventCode int64, data string,
 		C.uint64_t(eventCode), cData, C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
-	tag int64) {
+func (u unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64,
+	tag uint64) {
 	C.UnitySendEventWithNumberCaller(unsafe.Pointer(u.unitySendEventWithNumber),
 		C.uint64_t(eventCode), C.uint64_t(data), C.uint64_t(tag))
 }
 
-func (u unityBridgeImpl) SetEventCallback(eventCode int64,
+func (u unityBridgeImpl) SetEventCallback(eventCode uint64,
 	handler EventCallbackHandler) {
 	setEventCallbackHandler(eventCode, handler)
 
@@ -162,7 +165,7 @@ func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 		C.uint64_t(eventCode), C.EventCallback(C.eventCallbackC))
 }
 
-func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
+func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
 	cKey := C.UnityGetSecurityKeyByKeyChainIndexCaller(
 		unsafe.Pointer(u.UnityGetSecurityKeyByKeyChainIndex),
 		C.int(index))

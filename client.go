@@ -58,13 +58,13 @@ func (c *Client) Start() error {
 	// Reset connection to defaults.
 	ev := event.NewWithSubType(
 		event.TypeConnection, 2)
-	ub.SendEventWithString(int64(ev.Code()), "192.168.2.1", 0)
+	ub.SendEventWithString(ev.Code(), "192.168.2.1", 0)
 
 	ev = event.NewWithSubType(event.TypeConnection, 3)
-	ub.SendEventWithNumber(int64(ev.Code()), int64(10607), 0)
+	ub.SendEventWithNumber(ev.Code(), 10607, 0)
 
 	ev = event.New(event.TypeConnection)
-	ub.SendEvent(int64(ev.Code()), nil, 0)
+	ub.SendEvent(ev.Code(), nil, 0)
 
 	ip, err := c.finder.GetOrFindIP(5 * time.Second)
 	if err != nil {
@@ -72,16 +72,16 @@ func (c *Client) Start() error {
 	}
 
 	ev = event.NewWithSubType(event.TypeConnection, 1)
-	ub.SendEvent(int64(ev.Code()), nil, 0)
+	ub.SendEvent(ev.Code(), nil, 0)
 
 	ev = event.NewWithSubType(event.TypeConnection, 2)
-	ub.SendEventWithString(int64(ev.Code()), ip.String(), 0)
+	ub.SendEventWithString(ev.Code(), ip.String(), 0)
 
 	ev = event.NewWithSubType(event.TypeConnection, 3)
-	ub.SendEventWithNumber(int64(ev.Code()), int64(10607), 0)
+	ub.SendEventWithNumber(ev.Code(), 10607, 0)
 
 	ev = event.New(event.TypeConnection)
-	ub.SendEvent(int64(ev.Code()), nil, 0)
+	ub.SendEvent(ev.Code(), nil, 0)
 
 	return nil
 }

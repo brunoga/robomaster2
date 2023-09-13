@@ -29,14 +29,14 @@ func NewCommandController() (*CommandController, error) {
 		func(key callbacks.Key) error {
 			ev := event.NewWithSubType(event.TypeStartListening, uint64(key))
 
-			unitybridge.Get().SendEvent(int64(ev.Code()), nil, 0)
+			unitybridge.Get().SendEvent(ev.Code(), nil, 0)
 
 			return nil
 		},
 		func(key callbacks.Key) error {
 			ev := event.NewWithSubType(event.TypeStopListening, uint64(key))
 
-			unitybridge.Get().SendEvent(int64(ev.Code()), nil, 0)
+			unitybridge.Get().SendEvent(ev.Code(), nil, 0)
 
 			return nil
 		},
@@ -133,7 +133,7 @@ func (c *CommandController) PerformAction(key dji.Key, param interface{},
 	}
 
 	ev := event.NewWithSubType(event.TypePerformAction, uint64(key.Value()))
-	unitybridge.Get().SendEvent(int64(ev.Code()), data, int64(tag))
+	unitybridge.Get().SendEvent(ev.Code(), data, uint64(tag))
 
 	return nil
 }
@@ -168,18 +168,18 @@ func (c *CommandController) SetValueForKey(key dji.Key, param interface{},
 
 	ev := event.NewWithSubType(event.TypeSetValue, uint64(key.Value()))
 
-	unitybridge.Get().SendEventWithString(int64(ev.Code()), string(data), int64(tag))
+	unitybridge.Get().SendEventWithString(ev.Code(), string(data), uint64(tag))
 
 	return nil
 }
 
 func (c *CommandController) DirectSendValue(key dji.Key, value uint64) {
 	ev := event.NewWithSubType(event.TypePerformAction, uint64(key.Value()))
-	unitybridge.Get().SendEventWithNumber(int64(ev.Code()), int64(value), 0)
+	unitybridge.Get().SendEventWithNumber(ev.Code(), value, 0)
 }
 
-func (c *CommandController) HandleEventCallback(code int64, data []byte,
-	tag int64) {
+func (c *CommandController) HandleEventCallback(code uint64, data []byte,
+	tag uint64) {
 	var value interface{}
 
 	// TODO(bga): Apparently, the unity bridge reserves the upper 8 bits

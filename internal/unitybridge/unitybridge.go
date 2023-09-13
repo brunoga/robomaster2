@@ -1,7 +1,7 @@
 package unitybridge
 
 type EventCallbackHandler interface {
-	HandleEventCallback(eventCode int64, data []byte, tag int64)
+	HandleEventCallback(eventCode uint64, data []byte, tag uint64)
 }
 
 type UnityBridge interface {
@@ -9,11 +9,11 @@ type UnityBridge interface {
 	Destroy()
 	Initialize() bool
 	Uninitialize()
-	SendEvent(eventCode int64, data []byte, tag int64)
-	SendEventWithString(eventCode int64, data string, tag int64)
-	SendEventWithNumber(eventCode int64, data int64, tag int64)
-	SetEventCallback(eventCode int64, handler EventCallbackHandler)
-	GetSecurityKeyByKeyChainIndex(index int64) string
+	SendEvent(eventCode uint64, data []byte, tag uint64)
+	SendEventWithString(eventCode uint64, data string, tag uint64)
+	SendEventWithNumber(eventCode uint64, data uint64, tag uint64)
+	SetEventCallback(eventCode uint64, handler EventCallbackHandler)
+	GetSecurityKeyByKeyChainIndex(index uint64) string
 }
 
 func Get() UnityBridge {

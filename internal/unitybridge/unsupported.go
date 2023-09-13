@@ -1,4 +1,4 @@
-//go:build !((darwin && amd64) || (android && arm) || (android && arm64) || (ios && arm64) || (windows && amd64) || (linux && (amd64 || arm64)))
+//go:build !((darwin && (amd64 || arm64)) || (android && arm) || (android && arm64) || (ios && arm64) || (windows && amd64) || (linux && (amd64 || arm64)))
 
 package unitybridge
 
