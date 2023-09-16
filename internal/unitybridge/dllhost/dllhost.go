@@ -198,7 +198,7 @@ func runUnitySendEvent(data []byte, b *bytes.Buffer) {
 	length := binary.LittleEndian.Uint16(data[16:18])
 	data2 := data[18 : 18+length]
 
-	unitybridge.Get().SendEvent(int64(eventCode), data2, int64(tag))
+	unitybridge.Get().SendEvent(eventCode, data2, tag)
 
 	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(0))
@@ -210,7 +210,7 @@ func runUnitySendEventWithString(data []byte, b *bytes.Buffer) {
 	length := binary.LittleEndian.Uint16(data[16:18])
 	data2 := string(data[18 : 18+length])
 
-	unitybridge.Get().SendEventWithString(int64(eventCode), data2, int64(tag))
+	unitybridge.Get().SendEventWithString(eventCode, data2, tag)
 
 	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(0))
@@ -221,8 +221,7 @@ func runUnitySendEventWithNumber(data []byte, b *bytes.Buffer) {
 	tag := binary.LittleEndian.Uint64(data[8:16])
 	data2 := binary.LittleEndian.Uint64(data[16:24])
 
-	unitybridge.Get().SendEventWithNumber(int64(eventCode), int64(data2),
-		int64(tag))
+	unitybridge.Get().SendEventWithNumber(eventCode, data2, tag)
 
 	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(0))
@@ -233,9 +232,9 @@ func runUnitySetEventCallback(data []byte, b *bytes.Buffer) {
 	add := data[8] != 0
 
 	if add {
-		unitybridge.Get().SetEventCallback(int64(eventCode), catchAll)
+		unitybridge.Get().SetEventCallback(eventCode, catchAll)
 	} else {
-		unitybridge.Get().SetEventCallback(int64(eventCode), nil)
+		unitybridge.Get().SetEventCallback(eventCode, nil)
 	}
 
 	// Write data size.
@@ -245,7 +244,7 @@ func runUnitySetEventCallback(data []byte, b *bytes.Buffer) {
 func runGetSecurityKeyByKeyChainIndex(data []byte, b *bytes.Buffer) {
 	index := binary.LittleEndian.Uint64(data[0:8])
 
-	key := unitybridge.Get().GetSecurityKeyByKeyChainIndex(int64(index))
+	key := unitybridge.Get().GetSecurityKeyByKeyChainIndex(index)
 
 	// Write data size.
 	binary.Write(b, binary.LittleEndian, uint16(len(key)))

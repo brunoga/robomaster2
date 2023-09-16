@@ -10,7 +10,7 @@ type CatchAllHandler struct {
 	eventFile *os.File
 }
 
-func (c *CatchAllHandler) HandleEventCallback(eventCode int64, data []byte, tag int64) {
+func (c *CatchAllHandler) HandleEventCallback(eventCode uint64, data []byte, tag uint64) {
 	var b bytes.Buffer
 
 	// TOOD(bga): Add error checking.

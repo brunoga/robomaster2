@@ -104,7 +104,7 @@ func (u unityBridgeImpl) Uninitialize() {
 	_, _, _ = u.unityBridgeUninitialize.Call()
 }
 
-func (u unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {
+func (u unityBridgeImpl) SendEvent(eventCode uint64, data []byte, tag uint64) {
 	var dataUintptr uintptr
 	if len(data) == 0 {
 		dataUintptr = uintptr(unsafe.Pointer(nil))
@@ -119,8 +119,8 @@ func (u unityBridgeImpl) SendEvent(eventCode int64, data []byte, tag int64) {
 	)
 }
 
-func (u unityBridgeImpl) SendEventWithString(eventCode int64, data string,
-	tag int64) {
+func (u unityBridgeImpl) SendEventWithString(eventCode uint64, data string,
+	tag uint64) {
 	cData := C.CString(data)
 	defer C.free(unsafe.Pointer(cData))
 
@@ -131,8 +131,8 @@ func (u unityBridgeImpl) SendEventWithString(eventCode int64, data string,
 	)
 }
 
-func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
-	tag int64) {
+func (u unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64,
+	tag uint64) {
 	_, _, _ = u.unitySendEventWithNumber.Call(
 		uintptr(eventCode),
 		uintptr(data),
@@ -140,7 +140,7 @@ func (u unityBridgeImpl) SendEventWithNumber(eventCode int64, data int64,
 	)
 }
 
-func (u unityBridgeImpl) SetEventCallback(eventCode int64,
+func (u unityBridgeImpl) SetEventCallback(eventCode uint64,
 	handler EventCallbackHandler) {
 	setEventCallbackHandler(eventCode, handler)
 
@@ -155,7 +155,7 @@ func (u unityBridgeImpl) SetEventCallback(eventCode int64,
 	)
 }
 
-func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index int64) string {
+func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
 	cKeyUintptr, _, _ := u.UnityGetSecurityKeyByKeyChainIndex.Call(
 		uintptr(index),
 	)
