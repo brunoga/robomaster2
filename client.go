@@ -6,7 +6,10 @@ import (
 	"github.com/brunoga/robomaster2/internal/robot/service"
 	"github.com/brunoga/robomaster2/internal/robot/service/dji"
 	"github.com/brunoga/robomaster2/internal/robot/service/unitybridge"
+	"github.com/brunoga/robomaster2/modules/chassis"
 	"github.com/brunoga/robomaster2/modules/finder"
+	"github.com/brunoga/robomaster2/modules/gimbal"
+	"github.com/brunoga/robomaster2/modules/video"
 	"github.com/brunoga/robomaster2/support"
 )
 
@@ -15,6 +18,10 @@ type Client struct {
 
 	finder *finder.Finder
 	cc     service.DJICommandController
+
+	chassis *chassis.Chassis
+	gimbal  *gimbal.Gimbal
+	video   *video.Video
 }
 
 func NewClient(logger *support.Logger) (*Client, error) {
@@ -24,14 +31,17 @@ func NewClient(logger *support.Logger) (*Client, error) {
 		logger,
 		finder.New(logger),
 		cc,
+		chassis.New(logger),
+		gimbal.New(logger),
+		video.New(logger),
 	}, nil
 }
 
 func (c *Client) Start() error {
 	ub := unitybridge.DJIUnityBridgeInstance()
 	ub.Init()
-
 	c.cc.Init()
+	c.video.Start()
 
 	c.cc.StartListeningOnKey(dji.DJIAirLinkConnection, c,
 		func(result *dji.DJIResult) {
@@ -62,6 +72,19 @@ func (c *Client) Start() error {
 }
 
 func (c *Client) Stop() {
+	c.video.Stop()
 	c.cc.UnInit()
 	unitybridge.DJIUnityBridgeInstance().UnInit()
+}
+
+func (c *Client) Chassis() *chassis.Chassis {
+	return c.chassis
+}
+
+func (c *Client) Gimbal() *gimbal.Gimbal {
+	return c.gimbal
+}
+
+func (c *Client) Video() *video.Video {
+	return c.video
 }
