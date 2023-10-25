@@ -1,14 +1,11 @@
 package robomaster2
 
 import (
-	"fmt"
-	"sync"
 	"time"
 
-	"github.com/brunoga/robomaster2/internal"
-	"github.com/brunoga/robomaster2/internal/dji"
-	"github.com/brunoga/robomaster2/internal/event"
-	"github.com/brunoga/robomaster2/internal/unitybridge"
+	"github.com/brunoga/robomaster2/internal/robot/service"
+	"github.com/brunoga/robomaster2/internal/robot/service/dji"
+	"github.com/brunoga/robomaster2/internal/robot/service/unitybridge"
 	"github.com/brunoga/robomaster2/modules/finder"
 	"github.com/brunoga/robomaster2/support"
 )
@@ -17,14 +14,11 @@ type Client struct {
 	logger *support.Logger
 
 	finder *finder.Finder
-	cc     *internal.CommandController
+	cc     service.DJICommandController
 }
 
 func NewClient(logger *support.Logger) (*Client, error) {
-	cc, err := internal.NewCommandController()
-	if err != nil {
-		return nil, err
-	}
+	cc := service.DJICommandControllerInstance()
 
 	return &Client{
 		logger,
@@ -34,58 +28,40 @@ func NewClient(logger *support.Logger) (*Client, error) {
 }
 
 func (c *Client) Start() error {
-	ub := unitybridge.Get()
+	ub := unitybridge.DJIUnityBridgeInstance()
+	ub.Init()
 
-	if c.logger.TraceEnabled() {
-		ub.Create("Robomaster", true, "./log")
-	} else {
-		ub.Create("Robomaster", false, "")
-	}
+	c.cc.Init()
 
-	if !ub.Initialize() {
-		return fmt.Errorf("unable to initialize UnityBridge")
-	}
-
-	c.cc.StartListening(dji.KeyAirLinkConnection,
-		func(result *dji.Result, wg *sync.WaitGroup) {
+	c.cc.StartListeningOnKey(dji.DJIAirLinkConnection, c,
+		func(result *dji.DJIResult) {
 			if result.Value().(bool) {
-				c.finder.SendACK()
+				c.logger.INFO("Connected to Robot.")
 			}
-
-			wg.Done()
-		})
-
-	// Reset connection to defaults.
-	ev := event.NewWithSubType(
-		event.TypeConnection, 2)
-	ub.SendEventWithString(ev.Code(), "192.168.2.1", 0)
-
-	ev = event.NewWithSubType(event.TypeConnection, 3)
-	ub.SendEventWithNumber(ev.Code(), 10607, 0)
-
-	ev = event.New(event.TypeConnection)
-	ub.SendEvent(ev.Code(), nil, 0)
+		}, false)
 
 	ip, err := c.finder.GetOrFindIP(5 * time.Second)
 	if err != nil {
 		return err
 	}
 
-	ev = event.NewWithSubType(event.TypeConnection, 1)
-	ub.SendEvent(ev.Code(), nil, 0)
+	// Send ack.
+	c.finder.SendACK()
 
-	ev = event.NewWithSubType(event.TypeConnection, 2)
-	ub.SendEventWithString(ev.Code(), ip.String(), 0)
-
-	ev = event.NewWithSubType(event.TypeConnection, 3)
-	ub.SendEventWithNumber(ev.Code(), 10607, 0)
-
-	ev = event.New(event.TypeConnection)
-	ub.SendEvent(ev.Code(), nil, 0)
+	ub.SendEventWithoutDataOrTag(
+		unitybridge.NewDJIUnityEventWithTypeAndSubType(
+			unitybridge.Connection, 1))
+	ub.SendEventWithString(unitybridge.NewDJIUnityEventWithTypeAndSubType(
+		unitybridge.Connection, 2), ip.String(), 0)
+	ub.SendEventWithNumber(unitybridge.NewDJIUnityEventWithTypeAndSubType(
+		unitybridge.Connection, 3), 10607, 0)
+	ub.SendEventWithoutDataOrTag(unitybridge.NewDJIUnityEventWithType(
+		unitybridge.Connection))
 
 	return nil
 }
 
-func (c *Client) Stop() error {
-	return fmt.Errorf("not implemented")
+func (c *Client) Stop() {
+	c.cc.UnInit()
+	unitybridge.DJIUnityBridgeInstance().UnInit()
 }

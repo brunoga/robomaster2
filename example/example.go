@@ -17,13 +17,10 @@ func main() {
 
 	err = c.Start()
 	if err != nil {
-		panic(err)
+		l.ERROR("Error starting client: %s", err.Error())
+		// TODO(bga): Exit.
 	}
+	defer c.Stop()
 
 	time.Sleep(10 * time.Second)
-
-	err = c.Stop()
-	if err != nil {
-		panic(err)
-	}
 }
