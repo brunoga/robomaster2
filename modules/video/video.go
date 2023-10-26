@@ -14,7 +14,7 @@ type Video struct {
 	logger *support.Logger
 
 	m             sync.Mutex
-	videoHandlers map[int]VideoHandler
+	videoHandlers map[int]Handler
 	img           *RGB
 }
 
@@ -22,7 +22,7 @@ func New(logger *support.Logger) *Video {
 	return &Video{
 		logger,
 		sync.Mutex{},
-		make(map[int]VideoHandler),
+		make(map[int]Handler),
 		NewRGB(image.Rect(0, 0, 1280, 720)),
 	}
 }
@@ -45,7 +45,7 @@ func (v *Video) Stop() error {
 	return nil
 }
 
-func (v *Video) AddVideoHandler(videoHandler VideoHandler) (int, error) {
+func (v *Video) AddVideoHandler(videoHandler Handler) (int, error) {
 	v.m.Lock()
 	defer v.m.Unlock()
 

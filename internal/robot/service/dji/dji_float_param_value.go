@@ -1,3 +1,11 @@
 package dji
 
-type DJIFloatParamValue float32
+type DJIFloatParamValue struct {
+	Value float32 `json:"value"`
+}
+
+func NewDJIFloatParamValue(value float32) *DJIFloatParamValue {
+	return &DJIFloatParamValue{
+		Value: value,
+	}
+}

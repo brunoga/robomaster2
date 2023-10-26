@@ -1,5 +1,5 @@
 package video
 
-type VideoHandler interface {
+type Handler interface {
 	HandleVideo(img *RGB)
 }

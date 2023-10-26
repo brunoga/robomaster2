@@ -37,6 +37,8 @@ type DJICommandController interface {
 
 	StartListeningOnKey(key dji.DJIKeys, listener interface{},
 		callback func(*dji.DJIResult), fetchFromCache bool)
+	SetValueForKeyWithNumber(key dji.DJIKeys,
+		value int64, callback func(*dji.DJIResult))
 }
 
 type djiCommandController struct {
@@ -188,13 +190,7 @@ func (d *djiCommandController) SetValueForKey(key dji.DJIKeys,
 
 	mSetEvent.ResetSubType(subType)
 
-	data, err := json.Marshal(
-		struct {
-			Value any
-		}{
-			Value: paramValue,
-		},
-	)
+	data, err := json.Marshal(paramValue)
 	if err != nil {
 		panic(err)
 	}
@@ -202,9 +198,9 @@ func (d *djiCommandController) SetValueForKey(key dji.DJIKeys,
 	unitybridge.DJIUnityBridgeInstance().SendEvent(mSetEvent, data, uint64(tag))
 }
 
-func (d *djiCommandController) SetValueForKerWithNumber(key dji.DJIKeys,
+func (d *djiCommandController) SetValueForKeyWithNumber(key dji.DJIKeys,
 	value int64, callback func(*dji.DJIResult)) {
-	d.SetValueForKey(key, dji.DJILongParamValue(value), callback)
+	d.SetValueForKey(key, dji.NewDJILongParamValue(value), callback)
 }
 
 func (d *djiCommandController) PerformAction(key dji.DJIKeys, callback func(*dji.DJIResult)) {
@@ -235,7 +231,7 @@ func (d *djiCommandController) PerformActionWithParam(key dji.DJIKeys,
 
 func (d *djiCommandController) PerformActionWithNumber(key dji.DJIKeys,
 	value int64, callback func(*dji.DJIResult)) {
-	d.PerformActionWithParam(key, dji.DJILongParamValue(value), callback)
+	d.PerformActionWithParam(key, dji.NewDJILongParamValue(value), callback)
 }
 
 func (d *djiCommandController) DirectSendValue(key dji.DJIKeys, value int64) {

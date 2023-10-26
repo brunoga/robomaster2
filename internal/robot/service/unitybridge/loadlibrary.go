@@ -114,7 +114,6 @@ func (u unityBridgeImpl) SendEvent(eventCode uint64, data []byte, tag uint64) {
 	_, _, _ = u.unitySendEvent.Call(
 		uintptr(eventCode),
 		dataUintptr,
-		uintptr(len(data)),
 		uintptr(tag),
 	)
 }
