@@ -41,7 +41,6 @@ func (c *Client) Start() error {
 	ub := unitybridge.DJIUnityBridgeInstance()
 	ub.Init()
 	c.cc.Init()
-	c.video.Start()
 
 	c.cc.StartListeningOnKey(dji.DJIAirLinkConnection, c,
 		func(result *dji.DJIResult) {
@@ -67,6 +66,9 @@ func (c *Client) Start() error {
 		unitybridge.Connection, 3), 10607, 0)
 	ub.SendEventWithoutDataOrTag(unitybridge.NewDJIUnityEventWithType(
 		unitybridge.Connection))
+
+	c.Gimbal().Start()
+	//c.Chassis().Start()
 
 	return nil
 }

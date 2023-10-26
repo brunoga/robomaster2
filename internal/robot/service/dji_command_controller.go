@@ -14,12 +14,12 @@ import (
 var (
 	mInstance DJICommandController
 
-	mGetEvent            = unitybridge.NewDJIUnityEvent(uint64(unitybridge.GetValue))
-	mGetAvailableEvent   = unitybridge.NewDJIUnityEvent(uint64(unitybridge.GetAvailableValue))
-	mSetEvent            = unitybridge.NewDJIUnityEvent(uint64(unitybridge.SetValue))
-	mActionEvent         = unitybridge.NewDJIUnityEvent(uint64(unitybridge.PerformAction))
-	mStartListeningEvent = unitybridge.NewDJIUnityEvent(uint64(unitybridge.StartListening))
-	mStopListeningEvent  = unitybridge.NewDJIUnityEvent(uint64(unitybridge.StopListening))
+	mGetEvent            = unitybridge.NewDJIUnityEventWithType(unitybridge.GetValue)
+	mGetAvailableEvent   = unitybridge.NewDJIUnityEventWithType(unitybridge.GetAvailableValue)
+	mSetEvent            = unitybridge.NewDJIUnityEventWithType(unitybridge.SetValue)
+	mActionEvent         = unitybridge.NewDJIUnityEventWithType(unitybridge.PerformAction)
+	mStartListeningEvent = unitybridge.NewDJIUnityEventWithType(unitybridge.StartListening)
+	mStopListeningEvent  = unitybridge.NewDJIUnityEventWithType(unitybridge.StopListening)
 )
 
 func init() {
@@ -39,6 +39,9 @@ type DJICommandController interface {
 		callback func(*dji.DJIResult), fetchFromCache bool)
 	SetValueForKeyWithNumber(key dji.DJIKeys,
 		value int64, callback func(*dji.DJIResult))
+	PerformAction(key dji.DJIKeys, callback func(*dji.DJIResult))
+	PerformActionWithParam(key dji.DJIKeys,
+		value dji.DJIParamValue, callback func(*dji.DJIResult))
 }
 
 type djiCommandController struct {
@@ -67,7 +70,7 @@ func (d *djiCommandController) UnInit() {
 
 func (d *djiCommandController) OnEventCallback(event *unitybridge.DJIUnityEvent,
 	data []byte, tag uint64) {
-	switch unitybridge.DJIUnityDataType(byte(tag>>56) & 0xff) {
+	switch unitybridge.DJIUnityDataType(byte(int64(tag)>>56) & 0xff) {
 	case unitybridge.String:
 		n := bytes.IndexByte(data, 0)
 		if n == -1 {
@@ -220,7 +223,7 @@ func (d *djiCommandController) PerformActionWithParam(key dji.DJIKeys,
 	var data []byte
 	if value != nil {
 		var err error
-		data, err = json.Marshal(struct{ Value any }{Value: value})
+		data, err = json.Marshal(value)
 		if err != nil {
 			panic(err)
 		}
@@ -237,12 +240,12 @@ func (d *djiCommandController) PerformActionWithNumber(key dji.DJIKeys,
 func (d *djiCommandController) DirectSendValue(key dji.DJIKeys, value int64) {
 	mActionEvent.ResetSubType(key.Value())
 
-	data, err := json.Marshal(struct{ Value int64 }{Value: value})
+	data, err := json.Marshal(dji.NewDJILongParamValue(value))
 	if err != nil {
 		panic(err)
 	}
 
-	unitybridge.DJIUnityBridgeInstance().SendEvent(mActionEvent, data, 0)
+	unitybridge.DJIUnityBridgeInstance().SendEventWithString(mActionEvent, string(data), 0)
 }
 
 func (d *djiCommandController) onCommandEventCallback(

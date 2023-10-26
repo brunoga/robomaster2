@@ -5,8 +5,10 @@ import (
 	"reflect"
 )
 
+type DJIKeys int
+
 const (
-	DJIKeyNone = iota
+	DJIKeyNone DJIKeys = iota
 	DJIProductTest
 	DJIProductType
 	DJICameraConnection
@@ -355,17 +357,44 @@ const (
 
 var (
 	keyAttributeMap = map[DJIKeys]keyAttributes{
-		DJIAirLinkConnection: {117440513, typeof[DJIBoolParamValue](), AccessType_Read},
+		DJIAirLinkConnection:                 {117440513, typeof[DJIBoolParamValue](), AccessType_Read},
+		DJIGimbalAngleIncrementRotation:      {67108875, typeof[DJIGimbalAngleRotationParamValue](), AccessType_Action},
+		DJIGimbalAngleFrontPitchRotation:     {67108877, typeof[DJIGimbalAngleRotationParamValue](), AccessType_Action},
+		DJIGimbalAngleFrontYawRotation:       {67108876, typeof[DJIGimbalAngleRotationParamValue](), AccessType_Action},
+		DJIGimbalConnection:                  {67108865, typeof[DJIBoolParamValue](), AccessType_Read},
+		DJIGimbalOpenAttitudeUpdates:         {67108882, nil, AccessType_Action},
+		DJIGimbalResetPosition:               {67108870, typeof[DJIBoolParamValue](), AccessType_Action},
+		DJIRobomasterOpenChassisSpeedUpdates: {33554474, nil, AccessType_Action},
+		DJIRobomasterSystemConnection:        {83886081, typeof[DJIBoolParamValue](), AccessType_Read},
+		// TODO(bga): Add any keys we need here.
+	}
+
+	keyNameMap = map[DJIKeys]string{
+		DJIAirLinkConnection:                 "AirLinkConnection",
+		DJIGimbalAngleIncrementRotation:      "GimbalAngleIncrementRotation",
+		DJIGimbalAngleFrontPitchRotation:     "GimbalAngleFrontPitchRotation",
+		DJIGimbalAngleFrontYawRotation:       "GimbalAngleFrontYawRotation",
+		DJIGimbalConnection:                  "GimbalConnection",
+		DJIGimbalOpenAttitudeUpdates:         "GimbalOpenAttitudeUpdates",
+		DJIGimbalResetPosition:               "GimbalResetPosition",
+		DJIRobomasterOpenChassisSpeedUpdates: "RobomasterOpenChassisSpeedUpdates",
+		DJIRobomasterSystemConnection:        "RobomasterSystemConnection",
 		// TODO(bga): Add any keys we need here.
 	}
 
 	keyByValueMap = map[int]DJIKeys{
+		33554474:  DJIRobomasterOpenChassisSpeedUpdates,
+		67108865:  DJIGimbalConnection,
+		67108875:  DJIGimbalAngleIncrementRotation,
+		67108876:  DJIGimbalAngleFrontYawRotation,
+		67108870:  DJIGimbalResetPosition,
+		67108877:  DJIGimbalAngleFrontPitchRotation,
+		67108882:  DJIGimbalOpenAttitudeUpdates,
+		83886081:  DJIRobomasterSystemConnection,
 		117440513: DJIAirLinkConnection,
-		// TODO(bga): Add any keys we 117440513need here.
+		// TODO(bga): Add any keys we need here.
 	}
 )
-
-type DJIKeys int
 
 func getKeyAttributeOrPanic(k DJIKeys) keyAttributes {
 	ka, ok := keyAttributeMap[k]
@@ -386,6 +415,15 @@ func (k DJIKeys) DataType() reflect.Type {
 
 func (k DJIKeys) AccessType() AccessType {
 	return getKeyAttributeOrPanic(k).accessType
+}
+
+func (k DJIKeys) String() string {
+	name, ok := keyNameMap[k]
+	if !ok {
+		return fmt.Sprintf("Unknown(%d)", k)
+	}
+
+	return name
 }
 
 type AccessType int

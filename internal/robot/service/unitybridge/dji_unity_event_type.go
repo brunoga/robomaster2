@@ -1,6 +1,6 @@
 package unitybridge
 
-type DJIUnityEventType int
+type DJIUnityEventType int32
 
 const (
 	SetValue DJIUnityEventType = iota

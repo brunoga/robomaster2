@@ -67,7 +67,16 @@ func (r *DJIResult) parseJSONData(jsonData []byte) {
 	r.sequenceNumber = uint32(data["Tag"].(float64))
 	r.key = keyByValue(int(data["Key"].(float64)))
 	r.errorCode = int64(data["Error"].(float64))
-	r.value = data["Value"]
+
+	switch data["Value"].(type) {
+	case string:
+		r.value = data["Value"].(string)
+	case map[string]interface{}:
+		r.value = data["Value"].(map[string]interface{})["value"]
+	default:
+		panic(fmt.Sprintf("invalid value type: %T", data["Value"]))
+	}
+
 	if r.value == nil {
 		r.errorCode = -1
 	}

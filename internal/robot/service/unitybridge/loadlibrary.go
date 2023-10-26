@@ -120,6 +120,7 @@ func (u unityBridgeImpl) SendEvent(eventCode uint64, data []byte, tag uint64) {
 
 func (u unityBridgeImpl) SendEventWithString(eventCode uint64, data string,
 	tag uint64) {
+
 	cData := C.CString(data)
 	defer C.free(unsafe.Pointer(cData))
 

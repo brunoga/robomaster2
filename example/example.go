@@ -24,14 +24,18 @@ func main() {
 	}
 
 	err = c.Start()
-
-	c.Video().AddVideoHandler(&ExampleVideoHandler{})
-
 	if err != nil {
 		l.ERROR("Error starting client: %s", err.Error())
 		// TODO(bga): Exit.
 	}
+
 	defer c.Stop()
+
+	c.Video().AddVideoHandler(&ExampleVideoHandler{})
+
+	time.Sleep(2 * time.Second)
+
+	c.Gimbal().MoveToRelativeAngle(20, 0, 1.0)
 
 	time.Sleep(10 * time.Second)
 }

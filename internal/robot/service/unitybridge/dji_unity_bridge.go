@@ -3,6 +3,7 @@ package unitybridge
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 )
 
 var (
@@ -60,6 +61,7 @@ func (d *djiUnityBridge) SendEventWithoutTag(e *DJIUnityEvent, data []byte) {
 	unityBridge.SendEvent(e.GetCode(), data, 0)
 }
 func (d *djiUnityBridge) SendEventWithoutDataOrTag(e *DJIUnityEvent) {
+	fmt.Println(e.Type(), e.SubType(), e.GetCode())
 	unityBridge.SendEvent(e.GetCode(), nil, 0)
 }
 func (d *djiUnityBridge) SendEventWithNumber(e *DJIUnityEvent, data uint64, tag uint64) {
