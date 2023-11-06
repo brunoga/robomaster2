@@ -83,7 +83,7 @@ func (d *djiUnityBridge) GetInt32ValueWithEvent(e *DJIUnityEvent) int32 {
 	return int32(binary.NativeEndian.Uint32(mGetAvailableValuePtr))
 }
 func (d *djiUnityBridge) GetSecurityKeyByKeyChainIndex(index int) string {
-	return unityBridge.GetSecurityKeyByKeyChainIndex(index)
+	return unityBridge.GetSecurityKeyByKeyChainIndex(uint64(index))
 }
 
 func (d *djiUnityBridge) registerCallbacks() {

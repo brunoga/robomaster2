@@ -158,11 +158,14 @@ func (u unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64,
 }
 
 func (u unityBridgeImpl) SetEventCallback(eventCode uint64,
-	callback unityEventCallbackFunc) {
-	setUnityEventCallbackFunc(eventCode, callback)
+	add bool) {
+	var eventCallback C.EventCallback
+	if add {
+		eventCallback = C.EventCallback(C.eventCallbackC)
+	}
 
 	C.UnitySetEventCallbackCaller(unsafe.Pointer(u.unitySetEventCallback),
-		C.uint64_t(eventCode), C.EventCallback(C.eventCallbackC))
+		C.uint64_t(eventCode), eventCallback)
 }
 
 func (u unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {

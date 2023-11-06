@@ -364,6 +364,7 @@ var (
 		DJIGimbalConnection:                  {67108865, typeof[DJIBoolParamValue](), AccessType_Read},
 		DJIGimbalOpenAttitudeUpdates:         {67108882, nil, AccessType_Action},
 		DJIGimbalResetPosition:               {67108870, typeof[DJIBoolParamValue](), AccessType_Action},
+		DJIMainControllerVirtualStick:        {33554436, typeof[DJIRealControlParamValue](), AccessType_Action},
 		DJIRobomasterOpenChassisSpeedUpdates: {33554474, nil, AccessType_Action},
 		DJIRobomasterSystemConnection:        {83886081, typeof[DJIBoolParamValue](), AccessType_Read},
 		// TODO(bga): Add any keys we need here.
@@ -377,12 +378,14 @@ var (
 		DJIGimbalConnection:                  "GimbalConnection",
 		DJIGimbalOpenAttitudeUpdates:         "GimbalOpenAttitudeUpdates",
 		DJIGimbalResetPosition:               "GimbalResetPosition",
+		DJIMainControllerVirtualStick:        "MainControllerVirtualStick",
 		DJIRobomasterOpenChassisSpeedUpdates: "RobomasterOpenChassisSpeedUpdates",
 		DJIRobomasterSystemConnection:        "RobomasterSystemConnection",
 		// TODO(bga): Add any keys we need here.
 	}
 
 	keyByValueMap = map[int]DJIKeys{
+		33554436:  DJIMainControllerVirtualStick,
 		33554474:  DJIRobomasterOpenChassisSpeedUpdates,
 		67108865:  DJIGimbalConnection,
 		67108875:  DJIGimbalAngleIncrementRotation,

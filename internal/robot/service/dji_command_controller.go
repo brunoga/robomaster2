@@ -42,6 +42,7 @@ type DJICommandController interface {
 	PerformAction(key dji.DJIKeys, callback func(*dji.DJIResult))
 	PerformActionWithParam(key dji.DJIKeys,
 		value dji.DJIParamValue, callback func(*dji.DJIResult))
+	DirectSendValue(key dji.DJIKeys, value int64)
 }
 
 type djiCommandController struct {
@@ -245,7 +246,8 @@ func (d *djiCommandController) DirectSendValue(key dji.DJIKeys, value int64) {
 		panic(err)
 	}
 
-	unitybridge.DJIUnityBridgeInstance().SendEventWithString(mActionEvent, string(data), 0)
+	unitybridge.DJIUnityBridgeInstance().SendEventWithString(
+		mActionEvent, string(data), 0)
 }
 
 func (d *djiCommandController) onCommandEventCallback(

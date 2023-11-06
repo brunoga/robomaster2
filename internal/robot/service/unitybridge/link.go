@@ -75,13 +75,10 @@ func (ub unityBridgeImpl) SendEventWithNumber(eventCode uint64, data uint64,
 	C.UnitySendEventWithNumber(C.uint64_t(eventCode), C.uint64_t(data), C.uint64_t(tag))
 }
 
-func (ub unityBridgeImpl) SetEventCallback(eventCode uint64,
-	callback unityEventCallbackFunc) {
-	setEventCallbackHandler(eventCode, callback)
-
-	var eventCallbackC C.EventCallback
-	if callback != nil {
-		eventCallbackC = C.EventCallback(C.eventCallbackC)
+func (ub unityBridgeImpl) SetEventCallback(eventCode uint64, add bool) {
+	var eventCallback C.EventCallback
+	if add {
+		eventCallback = C.EventCallback(C.eventCallbackC)
 	}
 
 	C.UnitySetEventCallback(C.uint64_t(eventCode), eventCallbackC)
