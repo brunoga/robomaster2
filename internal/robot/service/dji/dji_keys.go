@@ -372,6 +372,9 @@ var (
 
 	keyNameMap = map[DJIKeys]string{
 		DJIAirLinkConnection:                 "AirLinkConnection",
+		DJICameraMode:                        "CameraMode",
+		DJICameraStartRecordVideo:            "CameraStartRecordVideo",
+		DJICameraStopRecordVideo:             "CameraStopRecordVideo",
 		DJIGimbalAngleIncrementRotation:      "GimbalAngleIncrementRotation",
 		DJIGimbalAngleFrontPitchRotation:     "GimbalAngleFrontPitchRotation",
 		DJIGimbalAngleFrontYawRotation:       "GimbalAngleFrontYawRotation",
@@ -385,6 +388,9 @@ var (
 	}
 
 	keyByValueMap = map[int]DJIKeys{
+		16777222:  DJICameraStartRecordVideo,
+		16777223:  DJICameraStopRecordVideo,
+		16777227:  DJICameraMode,
 		33554436:  DJIMainControllerVirtualStick,
 		33554474:  DJIRobomasterOpenChassisSpeedUpdates,
 		67108865:  DJIGimbalConnection,

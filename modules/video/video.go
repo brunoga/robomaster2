@@ -6,6 +6,8 @@ import (
 	"image"
 	"sync"
 
+	"github.com/brunoga/robomaster2/internal/robot/service"
+	"github.com/brunoga/robomaster2/internal/robot/service/dji"
 	"github.com/brunoga/robomaster2/internal/robot/service/unitybridge"
 	"github.com/brunoga/robomaster2/support"
 )
@@ -106,4 +108,50 @@ func (v *Video) OnEventCallback(event *unitybridge.DJIUnityEvent, data []byte, t
 
 		v.m.Unlock()
 	}
+}
+
+func (v *Video) StartSDCardRecording() {
+	cc := service.DJICommandControllerInstance()
+	cc.GetValueForKey(dji.DJICameraMode, func(result *dji.DJIResult) {
+		if !result.Succeeded() {
+			// Could not get camera mode. Nothing else to do.
+			v.logger.ERROR("Failed to get camera mode: %v", result)
+			return
+		}
+		if result.Value().(dji.DJILongParamValue).Value != 1 {
+			// Camera not in video more. Change it.
+			cc.SetValueForKeyWithNumber(dji.DJICameraMode, 1, func(result *dji.DJIResult) {
+				if !result.Succeeded() {
+					// Could not set camera mode. Nothing else to do.
+					v.logger.ERROR("Failed to set camera mode: %v", result)
+					return
+				}
+				cc.PerformAction(dji.DJICameraStartRecordVideo, func(result *dji.DJIResult) {
+					if !result.Succeeded() {
+						// Could not start recording. Nothing else to do.
+						v.logger.ERROR("Failed to start recording: %v", result)
+						return
+					}
+				})
+			})
+		} else {
+			// Camera already in video mode. Start recording.
+			cc.PerformAction(dji.DJICameraStartRecordVideo, func(result *dji.DJIResult) {
+				if !result.Succeeded() {
+					v.logger.ERROR("Failed to start recording: %v", result)
+					return
+				}
+			})
+		}
+	})
+}
+
+func (v *Video) StopSDCardRecording() {
+	cc := service.DJICommandControllerInstance()
+	cc.PerformAction(dji.DJICameraStopRecordVideo, func(result *dji.DJIResult) {
+		if !result.Succeeded() {
+			v.logger.ERROR("Failed to stop recording: %v", result)
+			return
+		}
+	})
 }

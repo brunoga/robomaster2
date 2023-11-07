@@ -43,6 +43,7 @@ type DJICommandController interface {
 	PerformActionWithParam(key dji.DJIKeys,
 		value dji.DJIParamValue, callback func(*dji.DJIResult))
 	DirectSendValue(key dji.DJIKeys, value int64)
+	GetValueForKey(key dji.DJIKeys, callback func(*dji.DJIResult))
 }
 
 type djiCommandController struct {

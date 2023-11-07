@@ -1,6 +1,6 @@
 //go:build ios && arm64
 
-package internal
+package unitybridge
 
 /*
 #include <stdbool.h>
@@ -81,7 +81,7 @@ func (ub unityBridgeImpl) SetEventCallback(eventCode uint64, add bool) {
 		eventCallback = C.EventCallback(C.eventCallbackC)
 	}
 
-	C.UnitySetEventCallback(C.uint64_t(eventCode), eventCallbackC)
+	C.UnitySetEventCallback(C.uint64_t(eventCode), eventCallback)
 }
 
 func (ub unityBridgeImpl) GetSecurityKeyByKeyChainIndex(index uint64) string {
